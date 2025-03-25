@@ -1,5 +1,6 @@
 // server/controllers/userController.js
 const User = require('../models/User');
+const bcrypt = require('bcryptjs');
 
 // @desc    Create a new user (by admin only)
 // @route   POST /api/users
@@ -82,30 +83,51 @@ exports.updateUser = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Update fields
-    user.name = req.body.name || user.name;
-    user.email = req.body.email || user.email;
-    user.role = req.body.role || user.role;
-    user.department = req.body.department || user.department;
-    user.position = req.body.position || user.position;
+    // Update fields dengan cara yang lebih eksplisit
+    if (req.body.name !== undefined) user.name = req.body.name;
+    if (req.body.email !== undefined) user.email = req.body.email;
+    if (req.body.role !== undefined) user.role = req.body.role;
+    
+    // Khusus untuk department, gunakan pengecekan aman
+    if (req.body.department !== undefined) {
+      user.department = req.body.department || ''; // Gunakan string kosong jika undefined
+    }
+    
+    if (req.body.position !== undefined) user.position = req.body.position;
     
     // Update password if provided
     if (req.body.password) {
-      user.password = req.body.password;
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(req.body.password, salt);
     }
 
+    // Update status jika diberikan
+    if (req.body.status !== undefined) user.status = req.body.status;
+
     const updatedUser = await user.save();
+    
+    // Kirim respon tanpa password
     res.json({
       _id: updatedUser._id,
       name: updatedUser.name,
       email: updatedUser.email,
       role: updatedUser.role,
       department: updatedUser.department,
-      position: updatedUser.position
+      position: updatedUser.position,
+      status: updatedUser.status
     });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Server error' });
+    
+    // Tangani error validasi Mongoose secara spesifik
+    if (err.name === 'ValidationError') {
+      return res.status(400).json({ 
+        message: 'Validation Error',
+        errors: Object.values(err.errors).map(e => e.message)
+      });
+    }
+    
+    res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
 
