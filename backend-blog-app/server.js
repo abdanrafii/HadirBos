@@ -4,17 +4,19 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 
-// Load env vars
-dotenv.config();
-
-// Connect to database
-connectDB();
-
 // Route files
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
+const attendanceRoutes = require('./routes/attendanceRoutes');
+
+// Load env vars
+dotenv.config();
+
 
 const app = express();
+
+// Connect to database
+connectDB();
 
 // Middleware
 app.use(express.json());
@@ -23,6 +25,7 @@ app.use(cors());
 // Mount routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/attendance', attendanceRoutes);
 
 // Basic route
 app.get('/', (req, res) => {

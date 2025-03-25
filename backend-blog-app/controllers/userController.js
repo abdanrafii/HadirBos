@@ -21,7 +21,8 @@ exports.createUser = async (req, res) => {
       password,
       role,
       department,
-      position
+      position,
+      status: 'active'
     });
 
     if (user) {

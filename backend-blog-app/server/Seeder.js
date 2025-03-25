@@ -19,6 +19,8 @@ const seedUsers = async () => {
         email: 'admin@example.com',
         password: await bcrypt.hash('admin123', 10), // Hash password
         role: 'admin',
+        department: 'Acountant',
+        position: 'HR',
         status: 'active',
       },
       {
@@ -26,6 +28,8 @@ const seedUsers = async () => {
         email: 'employee@example.com',
         password: await bcrypt.hash('employee123', 10),
         role: 'employee',
+        department: 'Acountant',
+        position: 'staff',
         status: 'active',
       },
       {
@@ -33,6 +37,8 @@ const seedUsers = async () => {
         email: 'ceo@example.com',
         password: await bcrypt.hash('ceooo123', 10),
         role: 'ceo',
+        department: 'IT',
+        position: 'CEO',
         status: 'active',
       }
     ];

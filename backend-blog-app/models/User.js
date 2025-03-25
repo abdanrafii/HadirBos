@@ -21,6 +21,14 @@ const UserSchema = new mongoose.Schema({
     enum: ['admin', 'employee', 'ceo'],
     default: 'employee'
   },
+  department: {
+    type: String,
+    required: true
+  },
+  position: {
+    type: String,
+    required: true
+  },
   status: {
     type: String,
     required: true
