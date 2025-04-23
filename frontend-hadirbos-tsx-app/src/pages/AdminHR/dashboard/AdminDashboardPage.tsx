@@ -1,0 +1,212 @@
+import { useState, useEffect, useContext } from "react";
+import { Users, PlusCircle, ChartNoAxesColumn, FileText } from "lucide-react";
+import StatsCard from "../../../components/StatsCard";
+import DeleteModal from "../../../components/DeleteModal";
+import { useNavigate } from "react-router";
+import { SearchContext } from "../../../context/SearchContext";
+import Loading from "../../../components/Loading";
+import { UserInfo as User } from "../../../types/user";
+import { getCurrentUser } from "../../../services/authServices";
+import { deleteUser, getUsers } from "../../../services/userService";
+
+const AdminDashboardPage = () => {
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const navigate = useNavigate();
+  const userInfo = getCurrentUser();
+  const searchTerm = useContext(SearchContext).searchTerm;
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const data = await getUsers(userInfo.token);
+        const employeeUsers = data.filter(
+          (user: User) => user.role === "employee"
+        );
+        setUsers(employeeUsers);
+      } catch (error) {
+        if (error instanceof Error) {
+          setError(error.message);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, [userInfo]);
+
+  const handleDeleteClick = (user: User) => {
+    setUserToDelete(user);
+    setIsModalOpen(true);
+  };
+
+  const handleDeleteUser = async () => {
+    if (userToDelete) {
+      try {
+        await deleteUser(userToDelete._id, userInfo.token);
+        setUsers(users.filter((user) => user._id !== userToDelete._id));
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          setError(error.message);
+        }
+      } finally {
+        setIsModalOpen(false);
+      }
+    }
+  };
+
+  const filteredUsers = users.filter(
+    (user) =>
+      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.position.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  return (
+    <>
+      <div className="mb-8">
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-bold text-gray-800">
+            Employee Management
+          </h1>
+          <button
+            className="bg-indigo-600 text-white flex items-center px-4 py-2 rounded-lg shadow-sm hover:bg-indigo-700 transition-colors"
+            onClick={() => navigate("/admin/add-user")}
+          >
+            <PlusCircle className="mr-2" size={16} />
+            Add New Employee
+          </button>
+        </div>
+
+        <p className="text-gray-600 mt-1">
+          Manage all employees and their information
+        </p>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <StatsCard
+          title="Total Employees"
+          value={users.length}
+          icon={<Users className="text-indigo-500" size={24} />}
+        />
+        <StatsCard
+          title="Departments"
+          value={[...new Set(users.map((user) => user.department))].length}
+          icon={<ChartNoAxesColumn className="text-green-500" size={24} />}
+        />
+        <StatsCard
+          title="Positions"
+          value={[...new Set(users.map((user) => user.position))].length}
+          icon={<FileText className="text-blue-500" size={24} />}
+        />
+      </div>
+
+      {error && (
+        <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded shadow mb-6">
+          {error}
+        </div>
+      )}
+
+      {loading ? (
+        <Loading />
+      ) : (
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+            <h3 className="text-lg font-semibold text-gray-800">
+              Employees Directory
+            </h3>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Name
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Email
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Department
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Position
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredUsers.map((user) => (
+                  <tr
+                    key={user._id}
+                    className="hover:bg-gray-50 transition-colors"
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0 h-10 w-10">
+                          <img
+                            className="h-10 w-10 rounded-full"
+                            src={`https://ui-avatars.com/api/?name=${user.name}`}
+                            alt=""
+                          />
+                        </div>
+                        <div className="ml-4">
+                          <div className="text-sm font-medium text-gray-900">
+                            {user.name}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{user.email}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                        {user.department}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {user.position}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <button
+                        className="text-indigo-600 hover:text-indigo-900 mr-3"
+                        onClick={() => navigate(`/admin/edit-user/${user._id}`)}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        className="text-red-600 hover:text-red-900"
+                        onClick={() => handleDeleteClick(user)}
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {isModalOpen && (
+        <DeleteModal
+          userName={userToDelete?.name}
+          onDelete={handleDeleteUser}
+          closeModal={() => setIsModalOpen(false)}
+        />
+      )}
+    </>
+  );
+};
+
+export default AdminDashboardPage;
