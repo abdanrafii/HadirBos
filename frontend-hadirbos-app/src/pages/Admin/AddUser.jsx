@@ -1,60 +1,60 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { User, Mail, Lock, Briefcase, Award, ChevronLeft } from 'lucide-react';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { User, Mail, Lock, Briefcase, Award, ChevronLeft, ChevronDown} from "lucide-react";
 
 const AddUser = () => {
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    role: 'employee',
-    department: '',
-    position: ''
+    name: "",
+    email: "",
+    password: "",
+    role: "employee",
+    department: "",
+    position: "",
   });
-  
-  const [error, setError] = useState('');
+
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  
-  const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-  
+
+  const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+
   const { name, email, password, role, department, position } = formData;
-  
+
   const onChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
-  
+
   const submitHandler = async (e) => {
     e.preventDefault();
     setLoading(true);
-    
+
     try {
       const config = {
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
           Authorization: `Bearer ${userInfo.token}`,
         },
       };
-      
+
       await axios.post(
-        'http://localhost:5000/api/users',
+        "http://localhost:5000/api/users",
         { name, email, password, role, department, position },
         config
       );
-      
+
       setLoading(false);
-      navigate('/admin/dashboard');
+      navigate("/admin/dashboard");
     } catch (error) {
       setError(
         error.response && error.response.data.message
           ? error.response.data.message
-          : 'Failed to add user'
+          : "Failed to add user"
       );
       setLoading(false);
     }
   };
-  
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center p-6">
       <div className="w-full max-w-2xl">
@@ -63,25 +63,28 @@ const AddUser = () => {
             <h3 className="text-2xl font-bold tracking-wide flex items-center">
               <User className="mr-3 w-7 h-7" /> Create New User Account
             </h3>
-            <button 
-              onClick={() => navigate('/admin/dashboard')}
+            <button
+              onClick={() => navigate("/admin/dashboard")}
               className="hover:bg-white/20 p-2 rounded-full transition-colors"
             >
               <ChevronLeft className="w-6 h-6" />
             </button>
           </div>
-          
+
           <div className="p-8 space-y-6">
             {error && (
               <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6">
                 <p className="text-red-700 font-medium">{error}</p>
               </div>
             )}
-            
+
             <form onSubmit={submitHandler} className="space-y-6">
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="name" className="block text-gray-700 font-semibold mb-2 flex items-center">
+                  <label
+                    htmlFor="name"
+                    className=" text-gray-700 font-semibold mb-2 flex items-center"
+                  >
                     <User className="mr-2 w-5 h-5 text-indigo-600" /> Full Name
                   </label>
                   <input
@@ -95,10 +98,14 @@ const AddUser = () => {
                     placeholder="Enter full name"
                   />
                 </div>
-                
+
                 <div>
-                  <label htmlFor="email" className="block text-gray-700 font-semibold mb-2 flex items-center">
-                    <Mail className="mr-2 w-5 h-5 text-indigo-600" /> Email Address
+                  <label
+                    htmlFor="email"
+                    className=" text-gray-700 font-semibold mb-2 flex items-center"
+                  >
+                    <Mail className="mr-2 w-5 h-5 text-indigo-600" /> Email
+                    Address
                   </label>
                   <input
                     type="email"
@@ -112,10 +119,13 @@ const AddUser = () => {
                   />
                 </div>
               </div>
-              
+
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="password" className="block text-gray-700 font-semibold mb-2 flex items-center">
+                  <label
+                    htmlFor="password"
+                    className="text-gray-700 font-semibold mb-2 flex items-center"
+                  >
                     <Lock className="mr-2 w-5 h-5 text-indigo-600" /> Password
                   </label>
                   <input
@@ -129,28 +139,38 @@ const AddUser = () => {
                     placeholder="Set a secure password"
                   />
                 </div>
-                
+
                 <div>
-                  <label htmlFor="role" className="block text-gray-700 font-semibold mb-2 flex items-center">
+                  <label
+                    htmlFor="role"
+                    className="text-gray-700 font-semibold mb-2 flex items-center"
+                  >
                     <Award className="mr-2 w-5 h-5 text-indigo-600" /> User Role
                   </label>
-                  <select
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
-                    id="role"
-                    name="role"
-                    value={role}
-                    onChange={onChange}
-                  >
-                    <option value="employee">Employee</option>
-                    <option value="admin">Admin</option>
-                  </select>
+                  <div className="relative">
+                    <select
+                      className="w-full px-4 py-3 appearance-none border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
+                      id="role"
+                      name="role"
+                      value={role}
+                      onChange={onChange}
+                    >
+                      <option value="employee">Employee</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                    <ChevronDown className="w-5 h-5 text-gray-500 absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none" />
+                  </div>
                 </div>
               </div>
-              
+
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="department" className="block text-gray-700 font-semibold mb-2 flex items-center">
-                    <Briefcase className="mr-2 w-5 h-5 text-indigo-600" /> Department
+                  <label
+                    htmlFor="department"
+                    className=" text-gray-700 font-semibold mb-2 flex items-center"
+                  >
+                    <Briefcase className="mr-2 w-5 h-5 text-indigo-600" />{" "}
+                    Department
                   </label>
                   <input
                     type="text"
@@ -163,9 +183,12 @@ const AddUser = () => {
                     placeholder="Enter department name"
                   />
                 </div>
-                
+
                 <div>
-                  <label htmlFor="position" className="block text-gray-700 font-semibold mb-2 flex items-center">
+                  <label
+                    htmlFor="position"
+                    className=" text-gray-700 font-semibold mb-2 flex items-center"
+                  >
                     <Award className="mr-2 w-5 h-5 text-indigo-600" /> Position
                   </label>
                   <input
@@ -180,21 +203,23 @@ const AddUser = () => {
                   />
                 </div>
               </div>
-              
+
               <div className="flex justify-end space-x-4 pt-4">
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
-                  onClick={() => navigate('/admin/dashboard')}
+                  onClick={() => navigate("/admin/dashboard")}
                 >
                   Cancel
                 </button>
-                <button 
-                  type="submit" 
-                  className={`px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-700 text-white rounded-lg hover:from-indigo-700 hover:to-purple-800 transition-all ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                <button
+                  type="submit"
+                  className={`px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-700 text-white rounded-lg hover:from-indigo-700 hover:to-purple-800 transition-all ${
+                    loading ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
                   disabled={loading}
                 >
-                  {loading ? 'Adding User...' : 'Create User Account'}
+                  {loading ? "Adding User..." : "Create User Account"}
                 </button>
               </div>
             </form>
