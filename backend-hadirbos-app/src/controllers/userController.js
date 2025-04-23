@@ -1,6 +1,5 @@
 // server/controllers/userController.js
 const User = require('../models/User');
-const bcrypt = require('bcryptjs');
 
 // @desc    Create a new user (by admin only)
 // @route   POST /api/users
@@ -96,9 +95,8 @@ exports.updateUser = async (req, res) => {
     if (req.body.position !== undefined) user.position = req.body.position;
     
     // Update password if provided
-    if (req.body.password) {
-      const salt = await bcrypt.genSalt(10);
-      user.password = await bcrypt.hash(req.body.password, salt);
+    if (req.body.password && req.body.password.trim() !== '') {
+      user.password = req.body.password; 
     }
 
     // Update status jika diberikan
