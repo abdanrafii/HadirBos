@@ -18,15 +18,14 @@ const Login = () => {
         password
       });
       
-      // Store user info and token in localStorage
       localStorage.setItem('userInfo', JSON.stringify(data));
       
-      // Redirect based on role
       if (data.role === 'admin') {
         navigate('/admin/dashboard');
       } else {
         navigate('/employee/dashboard');
       }
+      
     } catch (error) {
       setError(
         error.response && error.response.data.message

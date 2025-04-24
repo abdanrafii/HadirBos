@@ -1,9 +1,18 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import { User, Mail, Lock, Briefcase, Award, ChevronLeft, ChevronDown} from "lucide-react";
+import { useState } from "react";
+import { useNavigate } from "react-router";
+import {
+  User,
+  Mail,
+  Lock,
+  Briefcase,
+  Award,
+  ChevronLeft,
+  ChevronDown,
+} from "lucide-react";
+import { getCurrentUser } from "../../../services/authServices";
+import { createUser } from "../../../services/userService";
 
-const AddUser = () => {
+const AddUserPage = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -12,45 +21,30 @@ const AddUser = () => {
     department: "",
     position: "",
   });
-
+  const userInfo = getCurrentUser();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-
-  const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-
   const { name, email, password, role, department, position } = formData;
 
-  const onChange = (e) => {
+  const onChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const submitHandler = async (e) => {
+  const submitHandler = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const config = {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${userInfo.token}`,
-        },
-      };
-
-      await axios.post(
-        "http://localhost:5000/api/users",
-        { name, email, password, role, department, position },
-        config
-      );
-
-      setLoading(false);
+      await createUser(formData, userInfo.token);
       navigate("/admin/dashboard");
     } catch (error) {
-      setError(
-        error.response && error.response.data.message
-          ? error.response.data.message
-          : "Failed to add user"
-      );
+      if (error instanceof Error) {
+        setError(error.message);
+      }
+    } finally {
       setLoading(false);
     }
   };
@@ -230,4 +224,4 @@ const AddUser = () => {
   );
 };
 
-export default AddUser;
+export default AddUserPage;
