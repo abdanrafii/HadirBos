@@ -6,7 +6,7 @@ import { useNavigate } from "react-router";
 import { SearchContext } from "../../../context/SearchContext";
 import Loading from "../../../components/Loading";
 import { UserInfo as User } from "../../../types/user";
-import { getCurrentUser } from "../../../services/authServices";
+import { getCurrentUser } from "../../../services/authService";
 import { deleteUser, getUsers } from "../../../services/userService";
 
 const AdminDashboardPage = () => {

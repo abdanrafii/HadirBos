@@ -1,5 +1,5 @@
 import { Outlet, useNavigate } from "react-router";
-import { getCurrentUser } from "../services/authServices";
+import { getCurrentUser } from "../services/authService";
 import { useEffect } from "react";
 
 type ProtectedRouteProps = {

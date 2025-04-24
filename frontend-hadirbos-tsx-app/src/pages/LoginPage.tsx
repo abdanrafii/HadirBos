@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router";
-import { login } from "../services/authServices";
+import { login } from "../services/authService";
 import { TypeAnimation } from "react-type-animation";
 
 const LoginPage = () => {

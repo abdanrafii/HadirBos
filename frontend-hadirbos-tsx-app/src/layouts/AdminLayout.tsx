@@ -2,7 +2,7 @@ import { useState } from "react";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
 import { SearchContext } from "../context/SearchContext";
-import { getCurrentUser, logout } from "../services/authServices";
+import { getCurrentUser, logout } from "../services/authService";
 import { useNavigate } from "react-router";
 
 type MainLayoutProps = {

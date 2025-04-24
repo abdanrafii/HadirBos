@@ -2,14 +2,13 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { User } from "../../types/user";
 import { Attendance } from "../../types/attendance";
-import {
-  getCurrentUser,
-  getProfile,
-  logout,
-} from "../../services/authServices";
+import { getCurrentUser, getProfile, logout } from "../../services/authService";
 import Loading from "../../components/Loading";
 import { LogOut, Users } from "lucide-react";
-import { getAttendance, postAttendance } from "../../services/attendanceServices";
+import {
+  getAttendance,
+  postAttendance,
+} from "../../services/attendanceService";
 
 const EmployeeDashboardPage = () => {
   const [profile, setProfile] = useState<User | null>(null);
@@ -35,9 +34,7 @@ const EmployeeDashboardPage = () => {
         const profileResponse = await getProfile(userInfo.token);
         setProfile(profileResponse);
 
-        const attendanceResponse = await getAttendance(
-          userInfo.token
-        );
+        const attendanceResponse = await getAttendance(userInfo.token);
         setAttendanceData(attendanceResponse);
 
         const today = new Date().toISOString().split("T")[0];
@@ -49,7 +46,6 @@ const EmployeeDashboardPage = () => {
         if (todayEntry) {
           setTodayAttendance(todayEntry);
         }
-
       } catch (error) {
         if (error instanceof Error) {
           setError(error.message);
@@ -92,10 +88,11 @@ const EmployeeDashboardPage = () => {
       const attendancePayload = {
         status: attendanceStatus,
         note: attendanceNote,
-        employeeId: profile?._id,
+        employeeId: userInfo._id,
       };
 
-      const { data } = await postAttendance(attendancePayload, userInfo.token);
+      const data = await postAttendance(attendancePayload, userInfo.token);
+      console.log("Attendance submitted:", data);
 
       setAttendanceData([data, ...attendanceData]);
       setTodayAttendance(data);

@@ -10,7 +10,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { UserData } from "../../../types/user";
-import { getCurrentUser } from "../../../services/authServices";
+import { getCurrentUser } from "../../../services/authService";
 import Loading from "../../../components/Loading";
 import { getUserById, updateUser } from "../../../services/userService";
 
