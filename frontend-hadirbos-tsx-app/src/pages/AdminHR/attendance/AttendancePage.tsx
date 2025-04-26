@@ -557,6 +557,7 @@ export default function AttendancePage() {
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     const paginatedAbsences = lastAbsences.slice(startIndex, endIndex);
+    const totalPages = Math.ceil(lastAbsences.length / itemsPerPage);
 
     // Fungsi untuk mengubah halaman
     const nextPage = () => {
@@ -677,7 +678,7 @@ export default function AttendancePage() {
             </button>
 
             <span className="text-sm text-gray-600">
-              Page <strong>{currentPage}</strong>
+              Page <strong>{currentPage}</strong> of <strong>{totalPages}</strong>
             </span>
 
             <button

@@ -57,7 +57,7 @@ const EmployeeDashboardPage = () => {
     };
 
     fetchData();
-  }, [navigate, userInfo]);
+  }, [navigate, userInfo.token]);
 
   const logoutHandler = () => logout(navigate);
 

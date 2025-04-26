@@ -61,7 +61,7 @@ const EditUserPage = () => {
     };
 
     fetchUser();
-  }, [id, navigate, userInfo]);
+  }, [id, navigate, userInfo.token]);
 
   const onChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>

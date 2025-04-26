@@ -38,7 +38,7 @@ const AdminDashboardPage = () => {
     };
 
     fetchUsers();
-  }, [userInfo]);
+  }, [userInfo.token]);
 
   const handleDeleteClick = (user: User) => {
     setUserToDelete(user);
@@ -67,6 +67,25 @@ const AdminDashboardPage = () => {
       user.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.position.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+
+  const nextPage = () => {
+    if (paginatedUsers.length === itemsPerPage) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const prevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
 
   return (
     <>
@@ -145,7 +164,7 @@ const AdminDashboardPage = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredUsers.map((user) => (
+                {paginatedUsers.map((user) => (
                   <tr
                     key={user._id}
                     className="hover:bg-gray-50 transition-colors"
@@ -191,6 +210,38 @@ const AdminDashboardPage = () => {
                 ))}
               </tbody>
             </table>
+          </div>
+
+          <div className="flex justify-end m-4">
+            <div className="inline-flex items-center gap-2">
+              <button
+                onClick={prevPage}
+                disabled={currentPage === 1}
+                className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all duration-300 ${
+                  currentPage === 1
+                    ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+                    : "bg-white hover:bg-gray-100 text-gray-700 border-gray-300"
+                }`}
+              >
+                Previous
+              </button>
+
+              <span className="text-sm text-gray-600">
+                Page <strong>{currentPage}</strong> of <strong>{totalPages}</strong>
+              </span>
+
+              <button
+                onClick={nextPage}
+                disabled={paginatedUsers.length < itemsPerPage}
+                className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all duration-300 ${
+                  paginatedUsers.length < itemsPerPage
+                    ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+                    : "bg-white hover:bg-gray-100 text-gray-700 border-gray-300"
+                }`}
+              >
+                Next
+              </button>
+            </div>
           </div>
         </div>
       )}
