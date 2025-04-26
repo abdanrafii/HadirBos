@@ -8,6 +8,7 @@ import Loading from "../../../components/Loading";
 import { UserInfo as User } from "../../../types/user";
 import { getCurrentUser } from "../../../services/authService";
 import { deleteUser, getUsers } from "../../../services/userService";
+import Avatar from "../../../components/Avatar";
 
 const AdminDashboardPage = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -152,11 +153,7 @@ const AdminDashboardPage = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10">
-                          <img
-                            className="h-10 w-10 rounded-full"
-                            src={`https://ui-avatars.com/api/?name=${user.name}`}
-                            alt=""
-                          />
+                          <Avatar name={user.name} />
                         </div>
                         <div className="ml-4">
                           <div className="text-sm font-medium text-gray-900">

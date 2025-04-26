@@ -9,6 +9,7 @@ import {
   getAttendance,
   postAttendance,
 } from "../../services/attendanceService";
+import Avatar from "../../components/Avatar";
 
 const EmployeeDashboardPage = () => {
   const [profile, setProfile] = useState<User | null>(null);
@@ -174,10 +175,8 @@ const EmployeeDashboardPage = () => {
             <div className="lg:col-span-1">
               <div className="bg-white rounded-lg shadow-md overflow-hidden">
                 <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-6 flex flex-col items-center">
-                  <div className="w-24 h-24 bg-gray-300 rounded-full mb-4 flex items-center justify-center text-gray-600 text-3xl font-bold">
-                    {profile.name.charAt(0)}
-                  </div>
-                  <h3 className="text-xl font-bold text-white">
+                  <Avatar name={profile.name} size={24} className="font-bold text-3xl"/>
+                  <h3 className="text-xl font-bold text-white mt-4">
                     {profile.name}
                   </h3>
                   <p className="text-blue-100">{profile.position}</p>

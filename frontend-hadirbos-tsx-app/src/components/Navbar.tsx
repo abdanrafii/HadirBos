@@ -2,6 +2,7 @@ import { Bell, Search } from "lucide-react";
 import { useContext } from "react";
 import { SearchContext } from "../context/SearchContext";
 import { UserInfo } from "../types/user";
+import Avatar from "./Avatar";
 
 type NavbarProps = {
   userInfo: UserInfo | null;
@@ -39,11 +40,7 @@ const Navbar = ({ userInfo, showSearch = true }: NavbarProps) => {
           </button>
 
           <div className="flex items-center">
-            <img
-              src={`https://ui-avatars.com/api/?name=${userInfo?.name}`}
-              alt="Profile"
-              className="h-8 w-8 rounded-full object-cover"
-            />
+            <Avatar name={userInfo?.name} />
             <div className="ml-3 mr-4">
               <p className="text-sm font-medium text-gray-700">
                 {userInfo?.name}
