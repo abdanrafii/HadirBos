@@ -2,14 +2,14 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { User } from "../../types/user";
 import { Attendance } from "../../types/attendance";
-import {
-  getCurrentUser,
-  getProfile,
-  logout,
-} from "../../services/authServices";
+import { getCurrentUser, getProfile, logout } from "../../services/authService";
 import Loading from "../../components/Loading";
 import { LogOut, Users } from "lucide-react";
-import { getAttendance, postAttendance } from "../../services/attendanceServices";
+import {
+  getAttendance,
+  postAttendance,
+} from "../../services/attendanceService";
+import Avatar from "../../components/Avatar";
 
 const EmployeeDashboardPage = () => {
   const [profile, setProfile] = useState<User | null>(null);
@@ -35,9 +35,7 @@ const EmployeeDashboardPage = () => {
         const profileResponse = await getProfile(userInfo.token);
         setProfile(profileResponse);
 
-        const attendanceResponse = await getAttendance(
-          userInfo.token
-        );
+        const attendanceResponse = await getAttendance(userInfo.token);
         setAttendanceData(attendanceResponse);
 
         const today = new Date().toISOString().split("T")[0];
@@ -49,7 +47,6 @@ const EmployeeDashboardPage = () => {
         if (todayEntry) {
           setTodayAttendance(todayEntry);
         }
-
       } catch (error) {
         if (error instanceof Error) {
           setError(error.message);
@@ -60,7 +57,7 @@ const EmployeeDashboardPage = () => {
     };
 
     fetchData();
-  }, [navigate, userInfo]);
+  }, [navigate, userInfo.token]);
 
   const logoutHandler = () => logout(navigate);
 
@@ -92,10 +89,11 @@ const EmployeeDashboardPage = () => {
       const attendancePayload = {
         status: attendanceStatus,
         note: attendanceNote,
-        employeeId: profile?._id,
+        employeeId: userInfo._id,
       };
 
-      const { data } = await postAttendance(attendancePayload, userInfo.token);
+      const data = await postAttendance(attendancePayload, userInfo.token);
+      console.log("Attendance submitted:", data);
 
       setAttendanceData([data, ...attendanceData]);
       setTodayAttendance(data);
@@ -135,23 +133,36 @@ const EmployeeDashboardPage = () => {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-600 to-indigo-700 shadow-lg">
-        <div className="container mx-auto px-4 py-4">
+        <div className="container mx-auto px-4 py-3 sm:py-4">
           <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-2">
-              <div className="bg-white p-2 rounded-full">
-                <Users className="h-8 w-8 text-blue-600" />
+            <div className="flex items-center">
+              <div className="bg-white p-1.5 sm:p-2 rounded-full">
+                <Users className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600" />
               </div>
-              <div className="ml-2">
-                <h1 className="text-2xl font-bold text-white">
+              <div className="ml-2 sm:ml-3">
+                <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-white">
                   Employee Portal
                 </h1>
                 {profile && (
-                  <p className="text-blue-100">Welcome, {profile.name}</p>
+                  <p className="text-xs sm:text-sm text-blue-100">
+                    Welcome, {profile.name}
+                  </p>
                 )}
               </div>
             </div>
+
+            {/* Mobile version - icon only */}
             <button
-              className="bg-white text-red-600 px-4 py-3 rounded-md hover:bg-red-100 hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-300 ease-in-out flex items-center space-x-3 shadow-md hover:shadow-xl"
+              className="md:hidden bg-white text-red-600 p-2.5 rounded-full hover:bg-red-100 hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-300 ease-in-out shadow-md hover:shadow-lg"
+              onClick={logoutHandler}
+              aria-label="Logout"
+            >
+              <LogOut className="h-5 w-5" />
+            </button>
+
+            {/* Desktop version - with text */}
+            <button
+              className="hidden md:flex bg-white text-red-600 px-4 py-2.5 rounded-md hover:bg-red-100 hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-300 ease-in-out items-center space-x-2 shadow-md hover:shadow-lg"
               onClick={logoutHandler}
             >
               <LogOut className="h-5 w-5" />
@@ -177,10 +188,12 @@ const EmployeeDashboardPage = () => {
             <div className="lg:col-span-1">
               <div className="bg-white rounded-lg shadow-md overflow-hidden">
                 <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-6 flex flex-col items-center">
-                  <div className="w-24 h-24 bg-gray-300 rounded-full mb-4 flex items-center justify-center text-gray-600 text-3xl font-bold">
-                    {profile.name.charAt(0)}
-                  </div>
-                  <h3 className="text-xl font-bold text-white">
+                  <Avatar
+                    name={profile.name}
+                    size={24}
+                    className="font-bold text-3xl p-5"
+                  />
+                  <h3 className="text-xl font-bold text-white mt-4">
                     {profile.name}
                   </h3>
                   <p className="text-blue-100">{profile.position}</p>

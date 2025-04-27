@@ -8,6 +8,7 @@ import AddUserPage from "./pages/AdminHR/dashboard/AddUserPage";
 import EditUserPage from "./pages/AdminHR/dashboard/EditUserPage";
 import EmployeeDashboardPage from "./pages/Employee/EmployeeDashboardPage";
 import ProtectedRoute from "./utils/protectedRoute";
+import AttendancePage from "./pages/AdminHR/attendance/AttendancePage";
 
 function App() {
   return (
@@ -27,6 +28,14 @@ function App() {
         />
         <Route path="/admin/add-user" element={<AddUserPage />} />
         <Route path="/admin/edit-user/:id" element={<EditUserPage />} />
+        <Route
+          path="/admin/attendance"
+          element={
+            <AdminLayout showSearch={true}>
+              <AttendancePage />
+            </AdminLayout>
+          }
+        />
       </Route>
 
       {/* Employee Protected Route */}

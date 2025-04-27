@@ -6,9 +6,10 @@ const {
   getAttendances, 
   getAttendanceById, 
   updateAttendance,
-  getAttendanceStats 
+  getAttendanceStats, 
+  getAttendancesByUser
 } = require('../controllers/attendanceController');
-const { protect } = require('../middleware/authMiddleware');
+const { protect, admin } = require('../middleware/authMiddleware');
 const checkWorkingDay = require('../middleware/checkWorkingDayMiddleware');
 
 router.route('/')
@@ -23,5 +24,8 @@ router.route('/stats')
 router.route('/:id')
   .get(protect, getAttendanceById)
   .put(protect, updateAttendance);
+
+router.route('/employee/:employeeId')
+  .get(protect, admin, getAttendancesByUser);
 
 module.exports = router;

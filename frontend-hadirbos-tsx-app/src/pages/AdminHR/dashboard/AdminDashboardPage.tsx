@@ -1,13 +1,14 @@
 import { useState, useEffect, useContext } from "react";
-import { Users, PlusCircle, ChartNoAxesColumn, FileText } from "lucide-react";
+import { Users, PlusCircle, ChartNoAxesColumn, FileText, ChevronLeft, ChevronRight } from "lucide-react";
 import StatsCard from "../../../components/StatsCard";
 import DeleteModal from "../../../components/DeleteModal";
 import { useNavigate } from "react-router";
 import { SearchContext } from "../../../context/SearchContext";
 import Loading from "../../../components/Loading";
 import { UserInfo as User } from "../../../types/user";
-import { getCurrentUser } from "../../../services/authServices";
+import { getCurrentUser } from "../../../services/authService";
 import { deleteUser, getUsers } from "../../../services/userService";
+import Avatar from "../../../components/Avatar";
 
 const AdminDashboardPage = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -37,7 +38,7 @@ const AdminDashboardPage = () => {
     };
 
     fetchUsers();
-  }, [userInfo]);
+  }, [userInfo.token]);
 
   const handleDeleteClick = (user: User) => {
     setUserToDelete(user);
@@ -67,25 +68,47 @@ const AdminDashboardPage = () => {
       user.position.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+
+  const nextPage = () => {
+    if (paginatedUsers.length === itemsPerPage) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const prevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
   return (
     <>
-      <div className="mb-8">
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-800">
-            Employee Management
-          </h1>
+      <div className="mb-6 md:mb-8">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-800">
+              Employee Management
+            </h1>
+            <p className="text-sm sm:text-base text-gray-600 mt-1">
+              Manage all employees and their information
+            </p>
+          </div>
+
           <button
-            className="bg-indigo-600 text-white flex items-center px-4 py-2 rounded-lg shadow-sm hover:bg-indigo-700 transition-colors"
+            className="bg-indigo-600 text-white flex items-center justify-center px-3 py-2 sm:px-4 sm:py-2 rounded-lg shadow-sm hover:bg-indigo-700 transition-colors text-sm sm:text-base whitespace-nowrap mt-2 sm:mt-0"
             onClick={() => navigate("/admin/add-user")}
           >
-            <PlusCircle className="mr-2" size={16} />
-            Add New Employee
+            <PlusCircle className="mr-1 sm:mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+            <span className="hidden sm:inline">Add New Employee</span>
+            <span className="sm:hidden">Add Employee</span>
           </button>
         </div>
-
-        <p className="text-gray-600 mt-1">
-          Manage all employees and their information
-        </p>
       </div>
 
       {/* Stats Cards */}
@@ -144,7 +167,7 @@ const AdminDashboardPage = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredUsers.map((user) => (
+                {paginatedUsers.map((user) => (
                   <tr
                     key={user._id}
                     className="hover:bg-gray-50 transition-colors"
@@ -152,11 +175,7 @@ const AdminDashboardPage = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10">
-                          <img
-                            className="h-10 w-10 rounded-full"
-                            src={`https://ui-avatars.com/api/?name=${user.name}`}
-                            alt=""
-                          />
+                          <Avatar name={user.name} />
                         </div>
                         <div className="ml-4">
                           <div className="text-sm font-medium text-gray-900">
@@ -194,6 +213,41 @@ const AdminDashboardPage = () => {
                 ))}
               </tbody>
             </table>
+          </div>
+
+          <div className="flex justify-end items-center m-4">
+            <div className="inline-flex items-center gap-2 sm:gap-4">
+              <button
+                onClick={prevPage}
+                disabled={currentPage === 1}
+                className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all duration-300 ${
+                  currentPage === 1
+                    ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+                    : "bg-white hover:bg-gray-100 text-gray-700 border-gray-300"
+                }`}
+              >
+                <ChevronLeft className="h-4 w-4 sm:hidden" />
+                <span className="hidden sm:inline">Previous</span>
+              </button>
+
+              <span className="text-sm text-gray-600">
+                Page <strong>{currentPage}</strong> of{" "}
+                <strong>{totalPages}</strong>
+              </span>
+
+              <button
+                onClick={nextPage}
+                disabled={paginatedUsers.length < itemsPerPage}
+                className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all duration-300 ${
+                  paginatedUsers.length < itemsPerPage
+                    ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+                    : "bg-white hover:bg-gray-100 text-gray-700 border-gray-300"
+                }`}
+              >
+                <span className="hidden sm:inline">Next</span>
+                <ChevronRight className="h-4 w-4 sm:hidden" />
+              </button>
+            </div>
           </div>
         </div>
       )}

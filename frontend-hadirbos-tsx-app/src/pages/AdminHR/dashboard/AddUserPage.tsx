@@ -9,7 +9,7 @@ import {
   ChevronLeft,
   ChevronDown,
 } from "lucide-react";
-import { getCurrentUser } from "../../../services/authServices";
+import { getCurrentUser } from "../../../services/authService";
 import { createUser } from "../../../services/userService";
 
 const AddUserPage = () => {

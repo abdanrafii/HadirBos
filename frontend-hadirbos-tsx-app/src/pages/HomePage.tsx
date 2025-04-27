@@ -1,42 +1,39 @@
-import React, { useEffect, useState } from "react";
-import {
-  ArrowRight,
-  UserCheck,
-  ChartLine,
-  Calendar,
-  UserIcon,
-} from "lucide-react";
-
+import React, { useState, useEffect } from "react";
+import { ArrowRight, UserCheck, ChartLine, Calendar, UserIcon } from "lucide-react";
 import { motion } from "framer-motion";
-import HrLanding from "../assets/hr-landing.jpg";
-import { useNavigate } from "react-router";
-import MainLayout from "../layouts/MainlLayout";
 
-type FeatureCardProps = {
+import { useNavigate } from "react-router";
+// Define types for our components
+type FeatureProps = {
   icon: React.ReactNode;
   title: string;
-  description: string;
 };
 
-const FeatureCard = ({ icon, title, description }: FeatureCardProps) => {
-  return (
-    <motion.div
-      className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border-b-4 border-blue-600"
-      whileHover={{ y: -8, scale: 1.02 }}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-    >
-      <div className="bg-blue-50 p-3 rounded-full w-14 h-14 flex items-center justify-center mb-4">
-        <div className="text-blue-600 text-xl">{icon}</div>
-      </div>
-      <h3 className="text-xl font-bold text-gray-800 mb-2">{title}</h3>
-      <p className="text-gray-600">{description}</p>
-    </motion.div>
-  );
+type StatCardProps = {
+  number: string;
+  label: string;
 };
 
-const StatCard = ({ number, label }: { number: string; label: string }) => {
+const FeatureButton = ({ icon, title }: FeatureProps) => (
+  <motion.div
+    className="flex items-center space-x-2 bg-white/20 p-3 rounded-xl cursor-pointer transition-colors duration-200"
+    whileHover={{
+      scale: 1.05,
+      backgroundColor: "rgba(255, 255, 255, 0.3)",
+    }}
+    style={{
+      backdropFilter: "blur(8px)",
+      WebkitBackdropFilter: "blur(8px)",
+    }}
+    transition={{ duration: 0.2 }}
+  >
+    <div className="text-white">{icon}</div>
+    <span className="text-white font-medium">{title}</span>
+  </motion.div>
+);
+
+
+const StatCard = ({ number, label }: StatCardProps) => {
   const [count, setCount] = useState(0);
 
   useEffect(() => {
@@ -52,371 +49,178 @@ const StatCard = ({ number, label }: { number: string; label: string }) => {
 
   return (
     <motion.div
-      className="flex flex-col items-center"
+      className="text-center"
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5 }}
     >
-      <span className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-indigo-600 to-indigo-900 bg-clip-text text-transparent">
-        {count}+
-      </span>
-      <div className="text-2sm text-gray-600 from-gray-600 to-gray-900 mt-2 text-center font-medium">
-        {label}
-      </div>
+      <span className="text-3xl font-bold text-white">{count}+</span>
+      <div className="text-sm text-blue-100 font-medium">{label}</div>
     </motion.div>
   );
 };
 
-const TestimonialCard = ({
-  name,
-  role,
-  text,
-  image,
-}: {
-  name: string;
-  role: string;
-  text: string;
-  image: string;
-}) => {
-  return (
-    <motion.div
-      className="bg-white p-6 rounded-xl shadow-md"
-      whileHover={{ y: -5 }}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-    >
-      <div className="flex items-center mb-4">
-        <img
-          src={image}
-          alt={name}
-          className="w-12 h-12 rounded-full object-cover mr-4"
-        />
-        <div>
-          <h4 className="font-bold text-gray-800">{name}</h4>
-          <p className="text-sm text-gray-600">{role}</p>
-        </div>
-      </div>
-      <p className="text-gray-700 italic">"{text}"</p>
-    </motion.div>
-  );
-};
-
-const HomePage = () => {
+const HomePage: React.FC = () => {
   const navigate = useNavigate();
   return (
-    <MainLayout>
-      {/* Hero Section with Gradient Background */}
-      <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-indigo-600"></div>
-        <div className="absolute inset-0 opacity-20 bg-pattern"></div>
-
-        <div className="relative w-full min-h-screen flex flex-col md:flex-row items-center justify-between px-4 md:px-16 py-16">
-          {/* Left Section */}
+    <div className="w-full h-screen overflow-hidden relative">
+      {/* Background gradient with subtle pattern */}
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-indigo-900"></div>
+      <div className="absolute inset-0 opacity-10 bg-pattern"></div>
+      
+      {/* Content container */}
+      <div className="relative w-full h-full flex flex-col md:flex-row px-6 md:px-12 lg:px-20">
+        
+        {/* Left section - Content */}
+        <div className="md:w-7/12 h-full flex flex-col justify-center py-10">
           <motion.div
-            className="md:w-1/2 text-white z-10"
-            initial={{ opacity: 0, x: -50 }}
-            animate={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <div className="inline-block px-8 py-2 bg-white/20 backdrop-filter backdrop-blur-sm rounded-full text-sm font-medium mb-6 text-white shadow-lg">
-              HadirBOS
-            </div>
-
-            <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight">
-              <span className="drop-shadow-lg">Revolutionizing</span>
-              <br />
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-blue-200">
-                HR Management
-              </span>
+            
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 text-white leading-tight">
+              Revolutionizing <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-200 to-purple-200">HR Management</span>
             </h1>
-
-            <p className="text-lg md:text-xl mb-8 text-blue-100 max-w-lg">
-              Streamline your HR operations with our comprehensive suite of
-              tools designed for modern workplaces.
+            
+            <p className="text-blue-100 text-lg mb-8 max-w-lg">
+              Streamline your HR operations with our comprehensive suite of tools designed for modern workplaces.
             </p>
-
-            <div className="flex flex-wrap gap-4 mb-12 w-full">
-              <motion.button
-                className="w-full px-8 py-4 bg-white text-blue-600 rounded-full font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center text-lg"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => navigate("/login")}
-              >
-                Get Started <ArrowRight className="ml-2" />
-              </motion.button>
+            
+            {/* Feature buttons */}
+            <div className="grid grid-cols-2 gap-3 mb-8">
+              <FeatureButton icon={<UserCheck size={18} />} title="Attendance" />
+              <FeatureButton icon={<ChartLine size={18} />} title="Analytics" />
+              <FeatureButton icon={<Calendar size={18} />} title="Leave Mgmt." />
+              <FeatureButton icon={<UserIcon size={18} />} title="Teams" />
             </div>
-
-            <div className="flex justify-start space-x-16">
+            
+            {/* CTA Button */}
+            <motion.button
+              className="px-8 py-3 bg-white text-blue-700 rounded-full font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center mb-10"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => navigate("/login")}
+            >
+              Get Started <ArrowRight className="ml-2" size={18} />
+            </motion.button>
+            
+            {/* Stats */}
+            <div className="flex justify-between max-w-md">
               <StatCard number="10" label="Years of Experience" />
               <StatCard number="3000" label="Happy Employees" />
               <StatCard number="200" label="Companies" />
             </div>
           </motion.div>
-
-          {/* Right Section */}
+        </div>
+        
+        {/* Right section - Visual */}
+        <div className="md:w-5/12 flex items-center justify-center h-full relative">
           <motion.div
-            className="mt-16 md:mt-0 md:w-1/2 flex justify-center relative"
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
+            className="relative w-full h-full flex items-center justify-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 1, delay: 0.3 }}
           >
-            <div className="relative">
-              <div className="w-72 h-96 md:w-96 md:h-[520px] bg-gradient-to-tr from-indigo-700 to-purple-700 rounded-2xl absolute -right-6 -top-6 transform rotate-3 opacity-70"></div>
-              <div className="w-72 h-96 md:w-96 md:h-[520px] bg-gradient-to-br from-blue-400 to-indigo-600 rounded-2xl absolute right-6 top-6 transform -rotate-3 opacity-70"></div>
-              <img
-                src={HrLanding}
-                alt="HR Professional"
-                className="w-72 h-96 md:w-96 md:h-[520px] rounded-2xl object-cover relative z-10 shadow-2xl"
-              />
-
-              {/* Floating elements */}
-              <motion.div
-                className="absolute top-8 -left-10 bg-white p-4 rounded-xl shadow-xl z-20 flex items-center space-x-3"
-                animate={{
-                  y: [0, -10, 0],
-                }}
-                transition={{
-                  repeat: Infinity,
-                  duration: 4,
-                  ease: "easeInOut",
-                }}
-              >
-                <div className="bg-blue-100 p-2 rounded-lg">
-                  <UserCheck className="text-blue-600 text-xl" />
-                </div>
-                <div>
-                  <div className="text-sm font-semibold text-gray-800">
-                    Employee Onboarding
-                  </div>
-                  <div className="text-xs text-gray-500">
-                    Simplified Process
-                  </div>
-                </div>
-              </motion.div>
-
-              <motion.div
-                className="absolute bottom-8 -right-12 bg-white p-4 rounded-xl shadow-xl z-20"
-                animate={{
-                  y: [0, 10, 0],
-                }}
-                transition={{
-                  repeat: Infinity,
-                  duration: 3.5,
-                  ease: "easeInOut",
-                  delay: 0.5,
-                }}
-              >
-                <div className="font-semibold text-gray-800 mb-1">
-                  Performance
-                </div>
-                <div className="flex space-x-1">
-                  <div className="w-2 h-10 bg-blue-200 rounded-full"></div>
-                  <div className="w-2 h-14 bg-blue-400 rounded-full"></div>
-                  <div className="w-2 h-8 bg-blue-300 rounded-full"></div>
-                  <div className="w-2 h-12 bg-blue-500 rounded-full"></div>
-                  <div className="w-2 h-16 bg-blue-600 rounded-full"></div>
-                </div>
-              </motion.div>
-            </div>
-          </motion.div>
-        </div>
-
-        {/* Wave separator */}
-        <div className="absolute bottom-0 w-full">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 120">
-            <path
-              fill="#ffffff"
-              fillOpacity="1"
-              d="M0,64L80,69.3C160,75,320,85,480,80C640,75,800,53,960,48C1120,43,1280,53,1360,58.7L1440,64L1440,120L1360,120C1280,120,1120,120,960,120C800,120,640,120,480,120C320,120,160,120,80,120L0,120Z"
-            ></path>
-          </svg>
-        </div>
-      </div>
-
-      {/* Features Section */}
-      <div className="py-20 px-4 md:px-16 bg-white">
-        <div className="text-center mb-16">
-          <motion.h2
-            className="text-3xl md:text-4xl font-bold text-gray-800 mb-4"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            viewport={{ once: true }}
-          >
-            Powerful HR Features
-          </motion.h2>
-          <motion.p
-            className="text-gray-600 max-w-2xl mx-auto"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            viewport={{ once: true }}
-          >
-            Everything you need to manage your workforce efficiently in one
-            integrated platform
-          </motion.p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          <FeatureCard
-            icon={<UserCheck />}
-            title="Easy Attendance"
-            description="Simplified attendance tracking with geolocation verification and real-time monitoring."
-          />
-          <FeatureCard
-            icon={<ChartLine />}
-            title="Performance Analytics"
-            description="Track employee performance with intuitive dashboards and actionable insights."
-          />
-          <FeatureCard
-            icon={<Calendar />}
-            title="Leave Management"
-            description="Streamline leave requests, approvals, and balance tracking."
-          />
-          <FeatureCard
-            icon={<UserIcon />}
-            title="Team Management"
-            description="Build and manage effective teams with detailed organizational structure."
-          />
-        </div>
-      </div>
-
-      {/* Testimonials Section */}
-      <div className="py-20 px-4 md:px-16 bg-gray-50">
-        <div className="text-center mb-16">
-          <motion.h2
-            className="text-3xl md:text-4xl font-bold text-gray-800 mb-4"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            viewport={{ once: true }}
-          >
-            Trusted by HR Professionals
-          </motion.h2>
-          <motion.p
-            className="text-gray-600 max-w-2xl mx-auto"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            viewport={{ once: true }}
-          >
-            See what our users have to say about their experience
-          </motion.p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <TestimonialCard
-            name="Sarah Johnson"
-            role="HR Director, TechCorp"
-            text="HRManager has transformed how we handle employee data and attendance. The automation saves us countless hours every month."
-            image="https://randomuser.me/api/portraits/women/32.jpg"
-          />
-          <TestimonialCard
-            name="David Chen"
-            role="Operations Manager, Innovate Inc"
-            text="The reporting features are exceptional. I can now make data-driven decisions about staffing and scheduling with confidence."
-            image="https://randomuser.me/api/portraits/men/22.jpg"
-          />
-          <TestimonialCard
-            name="Michelle Rivera"
-            role="HR Manager, Global Services"
-            text="The employee onboarding process is now seamless. New hires get up to speed faster, and we've reduced paperwork by 85%."
-            image="https://randomuser.me/api/portraits/women/45.jpg"
-          />
-        </div>
-      </div>
-
-      {/* CTA Section 
-      <div className="relative py-20 px-4 md:px-16 bg-gradient-to-r from-blue-600 to-indigo-700 text-white">
-        <div className="absolute inset-0 opacity-10 bg-pattern"></div>
-        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between">
-          <div className="md:w-1/2 mb-10 md:mb-0">
-            <motion.h2 
-              className="text-3xl md:text-4xl font-bold mb-4"
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5 }}
-              viewport={{ once: true }}
-            >
-              Ready to Transform Your HR Operations?
-            </motion.h2>
-            <motion.p 
-              className="text-blue-100 text-lg mb-8 max-w-lg"
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              viewport={{ once: true }}
-            >
-              Join thousands of companies already using HRManager to streamline their HR processes.
-            </motion.p>
+            {/* Decorative elements */}
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 md:w-80 md:h-80 bg-blue-400 rounded-full opacity-20 filter blur-3xl"></div>
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-72 h-72 md:w-96 md:h-96 bg-indigo-500 rounded-full opacity-20 filter blur-3xl"></div>
             
+            {/* Main visual element */}
             <motion.div 
-              className="flex flex-wrap gap-4"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-              viewport={{ once: true }}
+              className="bg-white/10 backdrop-filter backdrop-blur-md p-8 rounded-2xl border border-white/20 shadow-2xl w-11/12 max-w-md relative z-10"
+              initial={{ y: 20 }}
+              animate={{ y: 0 }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                repeatType: "reverse",
+                ease: "easeInOut"
+              }}
             >
-              <Link to="/login" className="px-8 py-3 bg-white text-blue-600 rounded-full font-bold shadow-lg hover:shadow-xl transition-all flex items-center">
-                Get Started <ArrowRight className="ml-2" />
-              </Link>
-              <Link to="/contact" className="px-8 py-3 bg-transparent border-2 border-white text-white rounded-full font-bold hover:bg-white hover:bg-opacity-10 transition-all">
-                Contact Sales
-              </Link>
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex space-x-2">
+                  <div className="w-3 h-3 rounded-full bg-red-400"></div>
+                  <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
+                  <div className="w-3 h-3 rounded-full bg-green-400"></div>
+                </div>
+                <div className="text-white/70 text-sm">HadirBOS Dashboard</div>
+              </div>
+              
+              <div className="space-y-4">
+                {/* Dashboard elements */}
+                <div className="bg-white/10 rounded-lg p-3">
+                  <div className="text-white/80 text-xs mb-2">Today's Attendance</div>
+                  <div className="flex justify-between items-center">
+                    <div className="text-white font-bold text-2xl">87%</div>
+                    <div className="flex space-x-1">
+                      <div className="w-1 h-8 bg-blue-200 rounded-full"></div>
+                      <div className="w-1 h-10 bg-blue-300 rounded-full"></div>
+                      <div className="w-1 h-6 bg-blue-400 rounded-full"></div>
+                      <div className="w-1 h-12 bg-blue-500 rounded-full"></div>
+                      <div className="w-1 h-8 bg-blue-600 rounded-full"></div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-white/10 rounded-lg p-3">
+                    <div className="text-white/80 text-xs">On Leave</div>
+                    <div className="text-white font-bold">12</div>
+                  </div>
+                  <div className="bg-white/10 rounded-lg p-3">
+                    <div className="text-white/80 text-xs">Pending Requests</div>
+                    <div className="text-white font-bold">8</div>
+                  </div>
+                </div>
+                
+                <div className="bg-white/10 rounded-lg p-3">
+                  <div className="text-white/80 text-xs mb-2">Team Performance</div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-xs font-bold">DC</div>
+                    <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 text-xs font-bold">JL</div>
+                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xs font-bold">KM</div>
+                    <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-xs font-bold">AR</div>
+                    <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white text-xs">+8</div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Floating notification */}
+              <motion.div 
+                className="absolute -top-4 -right-4 bg-white p-2 rounded-lg shadow-lg flex items-center space-x-2"
+                animate={{
+                  y: [0, -5, 0],
+                }}
+                transition={{
+                  repeat: Infinity,
+                  duration: 3,
+                  ease: "easeInOut",
+                }}
+              >
+                <div className="bg-blue-100 p-1 rounded-md">
+                  <UserCheck className="text-blue-600" size={16} />
+                </div>
+                <div className="text-xs">
+                  <div className="font-medium text-gray-800">New check-in</div>
+                  <div className="text-gray-500 text-2xs">Just now</div>
+                </div>
+              </motion.div>
             </motion.div>
-          </div>
-          
-          <motion.div 
-            className="md:w-1/3"
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7 }}
-            viewport={{ once: true }}
-          >
-            <div className="bg-white bg-opacity-10 backdrop-filter backdrop-blur-sm p-8 rounded-2xl shadow-xl">
-              <h3 className="text-xl font-bold mb-4">Request a Demo</h3>
-              <form>
-                <div className="mb-4">
-                  <input 
-                    type="text" 
-                    placeholder="Full Name" 
-                    className="w-full p-3 rounded-lg bg-white bg-opacity-20 text-white placeholder-blue-100 outline-none border border-transparent focus:border-white" 
-                  />
-                </div>
-                <div className="mb-4">
-                  <input 
-                    type="email" 
-                    placeholder="Work Email" 
-                    className="w-full p-3 rounded-lg bg-white bg-opacity-20 text-white placeholder-blue-100 outline-none border border-transparent focus:border-white" 
-                  />
-                </div>
-                <div className="mb-4">
-                  <input 
-                    type="text" 
-                    placeholder="Company Name" 
-                    className="w-full p-3 rounded-lg bg-white bg-opacity-20 text-white placeholder-blue-100 outline-none border border-transparent focus:border-white" 
-                  />
-                </div>
-                <button 
-                  type="submit" 
-                  className="w-full p-3 bg-white text-blue-600 rounded-lg font-bold hover:bg-blue-50 transition-all"
-                >
-                  Schedule Demo
-                </button>
-              </form>
-            </div>
           </motion.div>
         </div>
-      </div>*/}
-
+      </div>
+      
       {/* Add CSS for background pattern */}
       <style>{`
         .bg-pattern {
           background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23ffffff' fill-opacity='1' fill-rule='evenodd'/%3E%3C/svg%3E");
         }
+        .text-2xs {
+          font-size: 0.65rem;
+        }
       `}</style>
-    </MainLayout>
+    </div>
   );
 };
 
