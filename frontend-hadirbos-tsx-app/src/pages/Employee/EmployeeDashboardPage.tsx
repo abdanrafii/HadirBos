@@ -25,9 +25,44 @@ const EmployeeDashboardPage = () => {
   const [todayAttendance, setTodayAttendance] = useState<Attendance | null>(
     null
   );
+  const [availableStatusOptions, setAvailableStatusOptions] = useState<string[]>([]);
 
   const navigate = useNavigate();
   const userInfo = getCurrentUser();
+
+  // Function to update available status options based on current time
+  const updateStatusOptions = () => {
+    const now = new Date();
+    const hours = now.getHours();
+    
+    // If time is between 8 AM and 10 AM (inclusive), show "present", "sick", "leave"
+    if (hours >= 8 && hours < 10) {
+      setAvailableStatusOptions(["present", "sick", "leave"]);
+      // If current selected status is "late", change it to "present"
+      if (attendanceStatus === "late") {
+        setAttendanceStatus("present");
+      }
+    } 
+    // After 10 AM, show "late", "sick", "leave"
+    else {
+      setAvailableStatusOptions(["late", "sick", "leave"]);
+      // If current selected status is "present", change it to "late"
+      if (attendanceStatus === "present") {
+        setAttendanceStatus("late");
+      }
+    }
+  };
+
+  useEffect(() => {
+    // Update status options initially
+    updateStatusOptions();
+
+    // Set interval to check time every minute
+    const intervalId = setInterval(updateStatusOptions, 60000);
+
+    // Clean up interval on component unmount
+    return () => clearInterval(intervalId);
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -393,11 +428,22 @@ const EmployeeDashboardPage = () => {
                                 setAttendanceStatus(e.target.value)
                               }
                             >
-                              <option value="present">Present</option>
-                              <option value="late">Late</option>
-                              <option value="sick">Sick</option>
-                              <option value="leave">Leave</option>
+                              {availableStatusOptions.map((status) => (
+                                <option key={status} value={status}>
+                                  {status.charAt(0).toUpperCase() + status.slice(1)}
+                                </option>
+                              ))}
                             </select>
+                            
+                            {/* Display current time notification */}
+                            <div className="mt-2 text-sm text-gray-500">
+                              Current time: {new Date().toLocaleTimeString()}
+                              {new Date().getHours() >= 10 && (
+                                <p className="text-yellow-600 mt-1">
+                                  Note: Attendance after 10:00 AM is marked as "Late"
+                                </p>
+                              )}
+                            </div>
                           </div>
 
                           <div className="mb-6">
