@@ -2,7 +2,7 @@ import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { Home, Search, Clock, ArrowLeft, Users, Calendar } from "lucide-react"
 import { Link, useNavigate } from "react-router"
-import { getCurrentUser } from "../services/authServices"
+import { getCurrentUser } from "../services/authService"
 
 const NotFoundPage = () => {
   const [searchTerm, setSearchTerm] = useState("")
