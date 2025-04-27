@@ -63,7 +63,7 @@ const StatCard = ({ number, label }: StatCardProps) => {
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
   return (
-    <div className="w-full h-screen overflow-hidden relative">
+    <div className="w-full min-h-screen flex flex-col overflow-x-hidden relative">
       {/* Background gradient with subtle pattern */}
       <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-indigo-900"></div>
       <div className="absolute inset-0 opacity-10 bg-pattern"></div>
