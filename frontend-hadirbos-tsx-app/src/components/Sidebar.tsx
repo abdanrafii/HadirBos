@@ -1,4 +1,4 @@
-import { useNavigate, useLocation } from "react-router"; 
+import { useNavigate, useLocation } from "react-router";
 import {
   Home,
   Users,
@@ -8,6 +8,7 @@ import {
   Menu,
   LogOut,
 } from "lucide-react";
+import { useEffect } from "react";
 
 type SidebarItemProps = {
   icon: React.ReactNode;
@@ -48,20 +49,43 @@ const Sidebar = ({
   setSidebarOpen,
   logoutHandler,
 }: SidebarProps) => {
-  const navigate = useNavigate(); 
-  const location = useLocation(); 
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  const isActive = (path : string) => location.pathname === path;
+  const isActive = (path: string) => location.pathname === path;
 
-  const handlePageChange = (path : string) => {
-    navigate(path); 
+  const handlePageChange = (path: string) => {
+    navigate(path);
+
+    // Close sidebar on smaller screens
+    if (window.innerWidth < 1024) {
+      setSidebarOpen(false);
+    }
   };
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 1024) {
+        setSidebarOpen(false);
+      } else {
+        setSidebarOpen(true);
+      }
+    };
+
+    handleResize();
+
+    window.addEventListener("resize", handleResize);
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, [setSidebarOpen]);
 
   return (
     <div
-      className={`bg-indigo-900 text-white ${
+      className={`bg-indigo-900 text-white transition-all duration-300 ease-in-out fixed top-0 left-0 h-full z-50 ${
         sidebarOpen ? "w-64" : "w-20"
-      } transition-all duration-300 ease-in-out`}
+      } ${
+        sidebarOpen ? "translate-x-0" : "-translate-x-full"
+      } lg:relative lg:translate-x-0`}
     >
       <div className="p-6">
         <div className="flex items-center justify-between">

@@ -2,15 +2,14 @@ import { useState, useEffect, useRef, useContext } from "react";
 import {
   ChevronLeft,
   ChevronRight,
-  Menu,
   Calendar,
   X,
   FileText,
   BarChart3,
   Clock,
   CalendarDays,
-  ChevronDown,
   Users,
+  Search,
 } from "lucide-react";
 import { format, parseISO, differenceInDays } from "date-fns";
 import { getCurrentUser } from "../../../services/authService";
@@ -39,9 +38,7 @@ export default function AttendancePage() {
   const [currentView, setCurrentView] = useState<
     "calendar" | "stats" | "absences"
   >("calendar");
-  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [dropdownRef, setDropdownRef] = useState<HTMLDivElement | null>(null);
   const sidebarRef = useRef<HTMLDivElement>(null);
   const searchTerm = useContext(SearchContext).searchTerm;
 
@@ -111,7 +108,7 @@ export default function AttendancePage() {
         if (error instanceof Error) {
           setError(error.message);
         }
-      } 
+      }
     };
     getAttendanceByIdEmployee();
   }, [selectedEmployee, userInfo.token, currentMonth, currentYear]);
@@ -140,10 +137,6 @@ export default function AttendancePage() {
   // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef && !dropdownRef.contains(event.target as Node)) {
-        setDropdownOpen(false);
-      }
-
       // Close sidebar when clicking outside on mobile
       if (
         sidebarRef.current &&
@@ -159,7 +152,7 @@ export default function AttendancePage() {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [dropdownRef, sidebarRef, sidebarOpen]);
+  }, [sidebarRef, sidebarOpen]);
 
   const filteredEmployees = employees.filter(
     (employee) =>
@@ -291,115 +284,119 @@ export default function AttendancePage() {
       days.push(i);
     }
 
-    return (
-      <div className="bg-white rounded-xl border border-gray-200 shadow-md p-2 md:p-4">
-        <div className="grid grid-cols-7 gap-1 md:gap-2">
-          {dayNames.map((day, index) => (
+return (
+  <div className="bg-white rounded-xl border border-gray-200 shadow-md p-2 ">
+    <div className="overflow-x-auto md:overscroll-x-none">
+      <div className="grid grid-cols-7 gap-1 md:gap-2 min-w-[700px]">
+        {dayNames.map((day, index) => (
+          <div
+            key={index}
+            className="text-center font-medium text-gray-700 p-1 md:p-2 text-xs md:text-sm"
+          >
+            {day}
+          </div>
+        ))}
+
+        {days.map((day, index) => {
+          if (day === null) {
+            return <div key={index} className="p-1 md:p-2"></div>;
+          }
+
+          const dayOfWeek = getDayOfWeek(currentYear, currentMonth, day);
+          const isWeekend = [0, 6].includes(dayOfWeek);
+
+          const dayAttendance = attendenceByIdEmployee
+            ? attendenceByIdEmployee.find((record) => {
+                const recordDate = new Date(record.date);
+                return (
+                  recordDate.getDate() === day &&
+                  recordDate.getMonth() === currentMonth &&
+                  recordDate.getFullYear() === currentYear
+                );
+              })
+            : null;
+
+          return (
             <div
               key={index}
-              className="text-center font-medium text-gray-700 p-1 md:p-2 text-xs md:text-sm"
+              className={`p-1 md:p-2 rounded-lg ${
+                isWeekend ? "bg-gray-50" : "bg-white"
+              } min-h-[60px] md:min-h-[80px] cursor-pointer hover:bg-gray-200 transition-colors border border-gray-200`}
+              onClick={() =>
+                selectedEmployee
+                  ? openAttendanceDetail(
+                      selectedEmployee,
+                      dayAttendance?._id ?? ""
+                    )
+                  : null
+              }
             >
-              {day}
-            </div>
-          ))}
-
-          {days.map((day, index) => {
-            if (day === null) {
-              return <div key={index} className="p-1 md:p-2"></div>;
-            }
-
-            const dayOfWeek = getDayOfWeek(currentYear, currentMonth, day);
-            const isWeekend = [0, 6].includes(dayOfWeek);
-
-            const dayAttendance = attendenceByIdEmployee
-              ? attendenceByIdEmployee.find((record) => {
-                  const recordDate = new Date(record.date);
-                  return (
-                    recordDate.getDate() === day &&
-                    recordDate.getMonth() === currentMonth &&
-                    recordDate.getFullYear() === currentYear
-                  );
-                })
-              : null;
-
-            return (
-              <div
-                key={index}
-                className={`p-1 md:p-2 rounded-lg ${
-                  isWeekend ? "bg-gray-50" : "bg-white"
-                } min-h-[60px] md:min-h-[80px] cursor-pointer hover:bg-gray-200 transition-colors border border-gray-200`}
-                onClick={() =>
-                  selectedEmployee
-                    ? openAttendanceDetail(
-                        selectedEmployee,
-                        dayAttendance?._id ?? ""
-                      )
-                    : null
-                }
-              >
-                <div className="text-gray-800 font-medium mb-1 md:mb-2 text-xs md:text-sm">
-                  {day}
-                </div>
-
-                {selectedEmployee ? (
-                  isWeekend ? (
-                    <div className="flex items-center">
-                      <div className="border-l-2 md:border-l-4 border-gray-300 pl-2">
-                        <div className="text-xs font-medium text-gray-500">
-                          Weekend
-                        </div>
-                      </div>
-                    </div>
-                  ) : dayAttendance ? (
-                    <div className="flex items-center">
-                      <div
-                        className={`border-l-2 md:border-l-4 pl-2 ${getStatusColor(
-                          dayAttendance.status
-                        )} rounded p-2 w-full`}
-                      >
-                        <div className="text-xs font-medium">
-                          {getStatusLabel(dayAttendance.status)}
-                        </div>
-                        {dayAttendance.date && (
-                          <div className="text-xs mt-1">
-                            In:{" "}
-                            {new Date(dayAttendance.date).toLocaleTimeString(
-                              [],
-                              {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                                hour12: false,
-                              }
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex items-center">
-                      <div
-                        className={`border-l-2 md:border-l-4 pl-2 ${getStatusColor(
-                          "absent"
-                        )} rounded p-2 w-full`}
-                      >
-                        <div className="text-xs font-medium">
-                          {getStatusLabel("absent")}
-                        </div>
-                        <div className="text-xs mt-1">In: -</div>
-                      </div>
-                    </div>
-                  )
-                ) : (
-                  <div className="text-xs text-gray-500 hidden md:block">
-                    Select an employee
-                  </div>
-                )}
+              <div className="text-gray-800 font-medium mb-1 md:mb-2 text-xs md:text-sm">
+                {day}
               </div>
-            );
-          })}
-        </div>
+
+              {selectedEmployee ? (
+                isWeekend ? (
+                  <div className="flex items-center">
+                    <div
+                      className={`border-l-2 md:border-l-4 pl-2 ${getStatusColor(
+                        "weekend"
+                      )} rounded p-2 w-full`}
+                    >
+                      <div className="text-xs font-medium text-gray-500 truncate">
+                        Weekend
+                      </div>
+                    </div>
+                  </div>
+                ) : dayAttendance ? (
+                  <div className="flex items-center">
+                    <div
+                      className={`border-l-2 md:border-l-4 pl-2 ${getStatusColor(
+                        dayAttendance.status
+                      )} rounded p-2 w-full`}
+                    >
+                      <div className="text-xs font-medium truncate">
+                        {getStatusLabel(dayAttendance.status)}
+                      </div>
+                      {dayAttendance.date && (
+                        <div className="text-xs mt-1 truncate">
+                          In:{" "}
+                          {new Date(dayAttendance.date).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            hour12: false,
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center truncate">
+                    <div
+                      className={`border-l-2 md:border-l-4 pl-2 ${getStatusColor(
+                        "absent"
+                      )} rounded p-2 w-full`}
+                    >
+                      <div className="text-xs font-medium truncate">
+                        {getStatusLabel("absent")}
+                      </div>
+                      <div className="text-xs mt-1">In: -</div>
+                    </div>
+                  </div>
+                )
+              ) : (
+                <div className="text-xs text-gray-500 hidden md:block">
+                  Select an employee
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
-    );
+    </div>
+  </div>
+);
+
   };
 
   // Render stats view
@@ -419,9 +416,10 @@ export default function AttendancePage() {
     return (
       <div className="bg-white rounded-xl border border-gray-200 shadow-md p-4 md:p-6">
         <div className="flex items-center mb-4 md:mb-6">
-          <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xl md:text-2xl font-bold mr-3 md:mr-4">
-            {employee?.name.charAt(0)}
-          </div>
+          <Avatar
+            name={employee?.name}
+            className="w-12 h-12 md:w-16 md:h-16 text-xl md:text-2xl font-bold mr-3 md:mr-4"
+          />
           <div>
             <h3 className="text-lg md:text-xl font-bold text-gray-800">
               {employee?.name}
@@ -548,155 +546,178 @@ export default function AttendancePage() {
   const [currentPage, setCurrentPage] = useState(1);
   // Render absences view
   // Update the renderAbsencesView function to handle 'sick' status
-  const renderAbsencesView = () => {
-    const itemsPerPage = 5; // Menampilkan 5 absensi per halaman
+const renderAbsencesView = () => {
+  const itemsPerPage = 5;
+  const lastAbsences = getMonthlyAbsences(currentMonth, currentYear).slice();
 
-    const lastAbsences = getMonthlyAbsences(currentMonth, currentYear).slice();
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedAbsences = lastAbsences.slice(startIndex, endIndex);
+  const totalPages = Math.ceil(lastAbsences.length / itemsPerPage);
 
-    // Menentukan batasan indeks untuk absensi yang ditampilkan
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    const paginatedAbsences = lastAbsences.slice(startIndex, endIndex);
-    const totalPages = Math.ceil(lastAbsences.length / itemsPerPage);
+  const nextPage = () => {
+    if (paginatedAbsences.length === itemsPerPage) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
 
-    // Fungsi untuk mengubah halaman
-    const nextPage = () => {
-      if (paginatedAbsences.length === itemsPerPage) {
-        setCurrentPage(currentPage + 1);
-      }
-    };
+  const prevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
 
-    const prevPage = () => {
-      if (currentPage > 1) {
-        setCurrentPage(currentPage - 1);
-      }
-    };
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 shadow-md p-3 md:p-6 w-full">
+      <h3 className="text-base md:text-xl font-bold text-gray-800 mb-3 md:mb-6">
+        Recent Employee Absences
+      </h3>
 
-    return (
-      <div className="bg-white rounded-xl border border-gray-200 shadow-md p-4 md:p-6">
-        <h3 className="text-lg md:text-xl font-bold text-gray-800 mb-4 md:mb-6">
-          Recent Employee Absences
-        </h3>
-
-        {paginatedAbsences.length === 0 ? (
-          <div className="text-center text-gray-700 p-4 md:p-8">
-            No absence records found
+      {paginatedAbsences.length === 0 ? (
+        <div className="text-center text-gray-700 p-4 rounded-lg bg-gray-50 border border-gray-100">
+          <div className="flex flex-col items-center justify-center py-4">
+            <CalendarDays className="h-12 w-12 text-gray-400 mb-2" />
+            <p className="font-medium">No absence records found</p>
+            <p className="text-sm text-gray-500">
+              Records will appear here when available
+            </p>
           </div>
-        ) : (
-          <div className="space-y-3 md:space-y-4">
-            {loadAbsences ? (
-              <Loading />
-            ) : (
-              paginatedAbsences.map((absence, index) => {
-                // Determine color based on status
-                let colorClasses = "";
-                if (absence.status === "absent") {
-                  colorClasses = "border-red-500 bg-red-50";
-                } else if (absence.status === "leave") {
-                  colorClasses = "border-blue-500 bg-blue-50";
-                } else if (absence.status === "sick") {
-                  colorClasses = "border-purple-500 bg-purple-50";
-                } else if (absence.status === "late") {
-                  colorClasses = "border-yellow-500 bg-yellow-50";
-                } else if (absence.status === "present") {
-                  colorClasses = "border-green-500 bg-green-50";
-                }
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {loadAbsences ? (
+            <Loading />
+          ) : (
+            paginatedAbsences.map((absence, index) => {
+              // Determine color based on status
+              let colorClasses = "";
+              if (absence.status === "absent") {
+                colorClasses = "border-red-500 bg-red-50";
+              } else if (absence.status === "leave") {
+                colorClasses = "border-blue-500 bg-blue-50";
+              } else if (absence.status === "sick") {
+                colorClasses = "border-purple-500 bg-purple-50";
+              } else if (absence.status === "late") {
+                colorClasses = "border-yellow-500 bg-yellow-50";
+              } else if (absence.status === "present") {
+                colorClasses = "border-green-500 bg-green-50";
+              }
 
-                return (
-                  <div
-                    key={index}
-                    className={`p-3 md:p-4 rounded-lg border-l-4 ${colorClasses} hover:bg-gray-50 transition-colors`}
-                  >
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                      <div className="flex items-center mb-2 sm:mb-0">
-                        <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold mr-2 md:mr-3">
-                          {absence.employee?.name.charAt(0)}
+              return (
+                <div
+                  key={index}
+                  className={`p-3 md:p-4 rounded-lg border-l-4 ${colorClasses} hover:bg-opacity-80 transition-all cursor-pointer shadow-sm`}
+                  onClick={() =>
+                    selectedEmployee
+                      ? openAttendanceDetail(
+                          selectedEmployee,
+                          absence?.attendanceId ?? ""
+                        )
+                      : null
+                  }
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-center mb-2 sm:mb-0">
+                      <Avatar
+                        name={absence.employee?.name}
+                        className="w-10 h-10 mr-3"
+                      />
+                      <div>
+                        <div className="font-medium text-gray-800 text-sm md:text-base">
+                          {absence.employee?.name}
                         </div>
-                        <div>
-                          <div className="font-medium text-gray-800 text-sm md:text-base">
-                            {absence.employee?.name}
-                          </div>
-                          <div className="text-gray-600 text-xs md:text-sm">
-                            {absence.employee?.department}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-left sm:text-right">
-                        <div className="text-gray-600 text-xs md:text-sm flex items-center sm:justify-end">
-                          <CalendarDays className="h-3 w-3 mr-1" />
-                          {format(parseISO(absence.date), "MMM d, yyyy")}
-                        </div>
-                        <div className="text-gray-600 text-xs md:text-sm flex items-center sm:justify-end">
-                          <Clock className="h-3 w-3 mr-1" />
-                          {absence.daysAgo === 0
-                            ? "Today"
-                            : absence.daysAgo === 1
-                            ? "Yesterday"
-                            : `${absence.daysAgo} days ago`}
+                        <div className="text-gray-600 text-xs md:text-sm">
+                          {absence.employee?.department}
                         </div>
                       </div>
                     </div>
 
-                    <div className="mt-2 md:mt-3 flex flex-wrap items-center gap-2">
-                      <div
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          absence.status === "absent"
-                            ? "bg-red-100 text-red-700"
-                            : absence.status === "sick"
-                            ? "bg-purple-100 text-purple-700"
-                            : "bg-blue-100 text-blue-700"
-                        }`}
-                      >
-                        {getStatusLabel(absence.status)}
+                    {/* Responsive date and time info */}
+                    <div className="flex items-center justify-between mt-2 sm:mt-0 sm:block sm:text-right">
+                      <div className="text-gray-600 text-xs md:text-sm flex items-center">
+                        <CalendarDays className="h-3 w-3 mr-1" />
+                        {format(parseISO(absence.date), "MMM d, yyyy")}
                       </div>
-                      {absence.note && (
-                        <div className="text-gray-600 text-xs md:text-sm italic">
-                          {absence.note}
-                        </div>
-                      )}
+                      <div className="text-gray-600 text-xs md:text-sm flex items-center">
+                        <Clock className="h-3 w-3 mr-1" />
+                        {absence.daysAgo === 0
+                          ? "Today"
+                          : absence.daysAgo === 1
+                          ? "Yesterday"
+                          : `${absence.daysAgo} days ago`}
+                      </div>
                     </div>
                   </div>
-                );
-              })
-            )}
-          </div>
-        )}
 
-        {/* Pagination Controls */}
-        <div className="flex justify-end mt-6">
-          <div className="inline-flex items-center gap-2">
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <div
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        absence.status === "absent"
+                          ? "bg-red-100 text-red-700"
+                          : absence.status === "sick"
+                          ? "bg-purple-100 text-purple-700"
+                          : absence.status === "leave"
+                          ? "bg-blue-100 text-blue-700"
+                          : absence.status === "late"
+                          ? "bg-yellow-100 text-yellow-700"
+                          : "bg-green-100 text-green-700"
+                      }`}
+                    >
+                      {getStatusLabel(absence.status)}
+                    </div>
+                    {absence.note && (
+                      <div className="text-gray-600 text-xs md:text-sm italic line-clamp-1 sm:line-clamp-none">
+                        {absence.note}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      )}
+
+      {/* Improved pagination controls for mobile */}
+      {paginatedAbsences.length > 0 && (
+        <div className="flex justify-end items-center mt-4 md:mt-6 ml-auto">
+          <div className="flex items-center gap-2 sm:gap-4">
             <button
               onClick={prevPage}
               disabled={currentPage === 1}
-              className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all duration-300 ${
+              className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg border text-xs sm:text-sm font-medium transition-all ${
                 currentPage === 1
                   ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
                   : "bg-white hover:bg-gray-100 text-gray-700 border-gray-300"
               }`}
             >
-              Previous
+              <ChevronLeft className="h-4 w-4 sm:hidden" />
+              <span className="hidden sm:inline">Previous</span>
             </button>
 
-            <span className="text-sm text-gray-600">
-              Page <strong>{currentPage}</strong> of <strong>{totalPages}</strong>
-            </span>
+            <div className="text-xs sm:text-sm text-gray-600">
+              Page <span className="font-medium">{currentPage}</span> of{" "}
+              <span className="font-medium">{totalPages || 1}</span>
+            </div>
 
             <button
               onClick={nextPage}
               disabled={paginatedAbsences.length < itemsPerPage}
-              className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all duration-300 ${
+              className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg border text-xs sm:text-sm font-medium transition-all ${
                 paginatedAbsences.length < itemsPerPage
                   ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
                   : "bg-white hover:bg-gray-100 text-gray-700 border-gray-300"
               }`}
             >
-              Next
+              <span className="hidden sm:inline">Next</span>
+              <ChevronRight className="h-4 w-4 sm:hidden" />
             </button>
           </div>
         </div>
-      </div>
-    );
-  };
+      )}
+    </div>
+  );
+};
 
   // Add a new function to handle year selection
   const handleYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -713,6 +734,8 @@ export default function AttendancePage() {
     setSidebarOpen(!sidebarOpen);
   };
 
+  const searchContext = useContext(SearchContext);
+
   // Update the sidebar layout to make the employee list scrollable but the attendance status fixed
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-white">
@@ -721,40 +744,13 @@ export default function AttendancePage() {
         <div className="flex items-center">
           <button
             onClick={toggleSidebar}
-            className="p-2 rounded-md hover:bg-gray-100 transition-colors"
+            className="p-2 rounded-md hover:bg-gray-200 transition-colors border border-gray-200"
           >
-            <Menu className="h-5 w-5 text-gray-700" />
+            <Users className="h-5 w-5 text-gray-700" />
           </button>
           <h1 className="text-lg font-semibold text-gray-800 ml-2">
             Employee Attendance
           </h1>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="relative" ref={dropdownRef}>
-            <button
-              className="flex items-center justify-between px-2 py-1 text-sm text-gray-800 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
-              onClick={() => setDropdownOpen(!dropdownOpen)}
-            >
-              <Users className="h-4 w-4 mr-1" />
-              <ChevronDown className="h-3 w-3" />
-            </button>
-            {dropdownOpen && (
-              <div className="absolute right-0 z-10 w-48 mt-1 bg-white border border-gray-200 rounded-md shadow-lg overflow-hidden">
-                {employees.map((employee) => (
-                  <div
-                    key={employee._id}
-                    className="px-3 py-2 text-sm text-gray-800 hover:bg-gray-100 cursor-pointer"
-                    onClick={() => {
-                      setSelectedEmployee(employee._id);
-                      setDropdownOpen(false);
-                    }}
-                  >
-                    {employee.name}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
         </div>
       </div>
 
@@ -766,7 +762,7 @@ export default function AttendancePage() {
             sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
           } fixed md:relative top-0 left-0 z-30 md:z-10 w-64 h-screen bg-gray-50 shadow-md border-r border-gray-200 transition-transform duration-300 ease-in-out flex flex-col`}
         >
-          {/* Sidebar Header with Title */}
+          {/* Sidebar Header */}
           <div className="p-4 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <h1 className="text-xl font-semibold text-gray-800">
@@ -780,41 +776,53 @@ export default function AttendancePage() {
               </button>
             </div>
           </div>
-          {/* Attendance Legend - Fixed, not scrollable */}
+
+          {/* Attendance Legend */}
           <div className="p-4 border-b border-gray-200">
             <h3 className="text-gray-800 font-medium mb-3">
               Attendance Status
             </h3>
             <div className="grid grid-cols-2 gap-2">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-sm bg-green-500"></div>
-                <span className="text-gray-700 text-sm">Present</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-sm bg-red-500"></div>
-                <span className="text-gray-700 text-sm">Absent</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-sm bg-blue-500"></div>
-                <span className="text-gray-700 text-sm">Leave</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-sm bg-yellow-500"></div>
-                <span className="text-gray-700 text-sm">Late</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-sm bg-purple-500"></div>
-                <span className="text-gray-700 text-sm">Sick</span>
-              </div>
+              {/* Status */}
+              {[
+                { color: "bg-green-500", label: "Present" },
+                { color: "bg-red-500", label: "Absent" },
+                { color: "bg-blue-500", label: "Leave" },
+                { color: "bg-yellow-500", label: "Late" },
+                { color: "bg-purple-500", label: "Sick" },
+              ].map((item, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <div className={`w-3 h-3 rounded-sm ${item.color}`}></div>
+                  <span className="text-gray-700 text-sm">{item.label}</span>
+                </div>
+              ))}
             </div>
           </div>
-          {/* Employee List - Scrollable */}
+
+          {/* Mobile Search Bar */}
+          <div className="p-4 border-b border-gray-200 md:hidden">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search employee..."
+                className="pl-9 pr-3 py-2 w-full rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
+                value={searchContext?.searchTerm}
+                onChange={(e) => searchContext?.setSearchTerm(e.target.value)}
+              />
+              <Search
+                className="absolute left-2.5 top-2.5 text-gray-400"
+                size={16}
+              />
+            </div>
+          </div>
+
+          {/* Employee List */}
           <h3 className="text-gray-800 font-medium p-4">Employees</h3>
           {loadEmployees ? (
             <Loading size={8} />
           ) : (
-            <div className="flex-1 overflow-auto p-4">
-              <div className="space-y-2">
+            <div className="flex-1 overflow-x-auto p-4">
+              <div className="space-y-2 min-w-max">
                 {filteredEmployees.map((employee) => (
                   <div
                     key={employee._id}
@@ -845,30 +853,30 @@ export default function AttendancePage() {
           )}
         </div>
 
-        <div className="flex-1 flex flex-col md:ml-0">
+        <div className="flex-1 flex flex-col md:ml-0 overflow-auto">
           {/* Calendar Controls */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between p-3 md:p-4 border-b border-gray-200">
-            <div className="flex items-center gap-2 md:gap-4 mb-3 md:mb-0">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between p-3 lg:p-4 border-b border-gray-200">
+            <div className="flex items-center gap-2 lg:gap-4 mb-3 lg:mb-0">
               <div className="flex">
                 <button
-                  className="p-1 md:p-2 text-gray-700 hover:bg-gray-100 rounded-l-md"
+                  className="p-1 lg:p-2 text-gray-700 hover:bg-gray-100 rounded-l-lg"
                   onClick={prevMonth}
                 >
-                  <ChevronLeft className="h-4 w-4 md:h-5 md:w-5" />
+                  <ChevronLeft className="h-4 w-4 lg:h-5 lg:w-5" />
                 </button>
                 <button
-                  className="p-1 md:p-2 text-gray-700 hover:bg-gray-100 rounded-r-md"
+                  className="p-1 lg:p-2 text-gray-700 hover:bg-gray-100 rounded-r-lg"
                   onClick={nextMonth}
                 >
-                  <ChevronRight className="h-4 w-4 md:h-5 md:w-5" />
+                  <ChevronRight className="h-4 w-4 lg:h-5 lg:w-5" />
                 </button>
               </div>
 
-              <div className="flex items-center gap-1 md:gap-2">
+              <div className="flex items-center gap-1 lg:gap-2">
                 <select
                   value={currentMonth}
                   onChange={handleMonthChange}
-                  className="bg-white border border-gray-300 rounded-md px-1 md:px-2 py-1 text-xs md:text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                  className="bg-white border border-gray-300 rounded-lg px-1 lg:px-2 py-1 text-xs lg:text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-300"
                 >
                   {Array.from({ length: 12 }, (_, i) => (
                     <option key={i} value={i}>
@@ -882,7 +890,7 @@ export default function AttendancePage() {
                 <select
                   value={currentYear}
                   onChange={handleYearChange}
-                  className="bg-white border border-gray-300 rounded-md px-1 md:px-2 py-1 text-xs md:text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                  className="bg-white border border-gray-300 rounded-lg px-1 lg:px-2 py-1 text-xs lg:text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-300"
                 >
                   {Array.from({ length: 10 }, (_, i) => {
                     const year = new Date().getFullYear() - 5 + i;
@@ -896,60 +904,40 @@ export default function AttendancePage() {
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2 md:gap-4">
-              {/* Employee selection dropdown (desktop) */}
-              <div className="hidden md:block relative" ref={dropdownRef}>
-                {dropdownOpen && (
-                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg overflow-hidden">
-                    {employees.map((employee) => (
-                      <div
-                        key={employee._id}
-                        className="px-4 py-2 text-gray-800 hover:bg-gray-100 cursor-pointer"
-                        onClick={() => {
-                          setSelectedEmployee(employee._id);
-                          setDropdownOpen(false);
-                        }}
-                      >
-                        {employee.name}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
+            <div className="flex flex-wrap items-center gap-2 lg:gap-4 lg:ml-4">
               {/* Custom tabs for view selection */}
-              <div className="flex bg-gray-100 rounded-md p-1 overflow-x-auto w-full md:w-auto">
+              <div className="flex bg-gray-100 rounded-lg p-1 overflow-x-auto lg:w-auto">
                 <button
-                  className={`flex items-center px-2 md:px-3 py-1 md:py-1.5 rounded whitespace-nowrap ${
+                  className={`flex items-center px-2 lg:px-3 py-1 lg:py-1.5 rounded whitespace-nowrap ${
                     currentView === "calendar"
                       ? "bg-white shadow-sm"
                       : "hover:bg-gray-200"
-                  } text-gray-800 text-xs md:text-sm transition-colors`}
+                  } text-gray-800 text-xs lg:text-sm transition-colors`}
                   onClick={() => setCurrentView("calendar")}
                 >
-                  <Calendar className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+                  <Calendar className="h-3 w-3 lg:h-4 lg:w-4 mr-1 lg:mr-2" />
                   Calendar
                 </button>
                 <button
-                  className={`flex items-center px-2 md:px-3 py-1 md:py-1.5 rounded whitespace-nowrap ${
+                  className={`flex items-center px-2 lg:px-3 py-1 lg:py-1.5 rounded whitespace-nowrap ${
                     currentView === "stats"
                       ? "bg-white shadow-sm"
                       : "hover:bg-gray-200"
-                  } text-gray-800 text-xs md:text-sm transition-colors`}
+                  } text-gray-800 text-xs lg:text-sm transition-colors`}
                   onClick={() => setCurrentView("stats")}
                 >
-                  <BarChart3 className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+                  <BarChart3 className="h-3 w-3 lg:h-4 lg:w-4 mr-1 lg:mr-2" />
                   Stats
                 </button>
                 <button
-                  className={`flex items-center px-2 md:px-3 py-1 md:py-1.5 rounded whitespace-nowrap ${
+                  className={`flex items-center px-2 lg:px-3 py-1 lg:py-1.5 rounded whitespace-nowrap ${
                     currentView === "absences"
                       ? "bg-white shadow-sm"
                       : "hover:bg-gray-200"
-                  } text-gray-800 text-xs md:text-sm transition-colors`}
+                  } text-gray-800 text-xs lg:text-sm transition-colors`}
                   onClick={() => setCurrentView("absences")}
                 >
-                  <FileText className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+                  <FileText className="h-3 w-3 lg:h-4 lg:w-4 mr-1 lg:mr-2" />
                   Absences
                 </button>
               </div>
@@ -963,7 +951,7 @@ export default function AttendancePage() {
           )}
 
           {/* View Content */}
-          <div className="flex-1 overflow-auto p-2 md:p-4">
+          <div className="flex-1 p-2 lg:p-4 min-w-full">
             {currentView === "calendar" && renderCalendarView()}
             {currentView === "stats" && renderStatsView()}
             {currentView === "absences" && renderAbsencesView()}
@@ -973,7 +961,7 @@ export default function AttendancePage() {
         {/* Mobile sidebar backdrop */}
         {sidebarOpen && (
           <div
-            className="fixed inset-0 bg-black bg-opacity-50 z-20 md:hidden"
+            className="fixed inset-0 bg-black/50 z-20 md:hidden"
             onClick={() => setSidebarOpen(false)}
           ></div>
         )}
@@ -1001,9 +989,7 @@ export default function AttendancePage() {
                     return (
                       <>
                         <div className="flex items-center mb-4">
-                          <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold mr-3 md:mr-4">
-                            {employee?.name.charAt(0)}
-                          </div>
+                          <Avatar name={employee?.name} className="mr-3" />
                           <div>
                             <h3 className="text-lg md:text-xl font-bold text-gray-800">
                               {employee?.name}

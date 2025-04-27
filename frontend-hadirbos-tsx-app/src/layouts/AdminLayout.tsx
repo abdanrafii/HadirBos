@@ -28,7 +28,12 @@ const AdminLayout = ({ children, showSearch }: MainLayoutProps) => {
         />
 
         <div className="flex-1 flex flex-col overflow-hidden">
-          <Navbar userInfo={userInfo} showSearch={showSearch} />
+          <Navbar
+            userInfo={userInfo}
+            showSearch={showSearch}
+            sidebarOpen={sidebarOpen}
+            setSidebarOpen={setSidebarOpen}
+          />
 
           <main className="flex-1 overflow-auto bg-gray-50 p-6">
             {children}

@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext } from "react";
-import { Users, PlusCircle, ChartNoAxesColumn, FileText } from "lucide-react";
+import { Users, PlusCircle, ChartNoAxesColumn, FileText, ChevronLeft, ChevronRight } from "lucide-react";
 import StatsCard from "../../../components/StatsCard";
 import DeleteModal from "../../../components/DeleteModal";
 import { useNavigate } from "react-router";
@@ -89,23 +89,26 @@ const AdminDashboardPage = () => {
 
   return (
     <>
-      <div className="mb-8">
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-800">
-            Employee Management
-          </h1>
+      <div className="mb-6 md:mb-8">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-800">
+              Employee Management
+            </h1>
+            <p className="text-sm sm:text-base text-gray-600 mt-1">
+              Manage all employees and their information
+            </p>
+          </div>
+
           <button
-            className="bg-indigo-600 text-white flex items-center px-4 py-2 rounded-lg shadow-sm hover:bg-indigo-700 transition-colors"
+            className="bg-indigo-600 text-white flex items-center justify-center px-3 py-2 sm:px-4 sm:py-2 rounded-lg shadow-sm hover:bg-indigo-700 transition-colors text-sm sm:text-base whitespace-nowrap mt-2 sm:mt-0"
             onClick={() => navigate("/admin/add-user")}
           >
-            <PlusCircle className="mr-2" size={16} />
-            Add New Employee
+            <PlusCircle className="mr-1 sm:mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+            <span className="hidden sm:inline">Add New Employee</span>
+            <span className="sm:hidden">Add Employee</span>
           </button>
         </div>
-
-        <p className="text-gray-600 mt-1">
-          Manage all employees and their information
-        </p>
       </div>
 
       {/* Stats Cards */}
@@ -212,8 +215,8 @@ const AdminDashboardPage = () => {
             </table>
           </div>
 
-          <div className="flex justify-end m-4">
-            <div className="inline-flex items-center gap-2">
+          <div className="flex justify-end items-center m-4">
+            <div className="inline-flex items-center gap-2 sm:gap-4">
               <button
                 onClick={prevPage}
                 disabled={currentPage === 1}
@@ -223,11 +226,13 @@ const AdminDashboardPage = () => {
                     : "bg-white hover:bg-gray-100 text-gray-700 border-gray-300"
                 }`}
               >
-                Previous
+                <ChevronLeft className="h-4 w-4 sm:hidden" />
+                <span className="hidden sm:inline">Previous</span>
               </button>
 
               <span className="text-sm text-gray-600">
-                Page <strong>{currentPage}</strong> of <strong>{totalPages}</strong>
+                Page <strong>{currentPage}</strong> of{" "}
+                <strong>{totalPages}</strong>
               </span>
 
               <button
@@ -239,7 +244,8 @@ const AdminDashboardPage = () => {
                     : "bg-white hover:bg-gray-100 text-gray-700 border-gray-300"
                 }`}
               >
-                Next
+                <span className="hidden sm:inline">Next</span>
+                <ChevronRight className="h-4 w-4 sm:hidden" />
               </button>
             </div>
           </div>
