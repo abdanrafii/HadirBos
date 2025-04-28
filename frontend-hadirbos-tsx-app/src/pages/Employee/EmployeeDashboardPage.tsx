@@ -225,7 +225,7 @@ const EmployeeDashboardPage = () => {
                 <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-6 flex flex-col items-center">
                   <Avatar
                     name={profile.name}
-                    size={24}
+                    size={"lg"}
                     className="font-bold text-3xl p-5"
                   />
                   <h3 className="text-xl font-bold text-white mt-4">
