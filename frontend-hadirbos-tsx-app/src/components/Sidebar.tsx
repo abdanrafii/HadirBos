@@ -7,6 +7,7 @@ import {
   Settings,
   Menu,
   LogOut,
+  ClipboardList,
 } from "lucide-react";
 import { useEffect } from "react";
 
@@ -113,6 +114,13 @@ const Sidebar = ({
           active={isActive("/admin/attendance")}
           collapsed={!sidebarOpen}
           onClick={() => handlePageChange("/admin/attendance")}
+        />
+        <SidebarItem
+          icon={<ClipboardList size={20} />}
+          text="Submissions"
+          active={isActive("/admin/submissions")}
+          collapsed={!sidebarOpen}
+          onClick={() => handlePageChange("/admin/submissions")}
         />
         <SidebarItem
           icon={<ChartNoAxesColumn size={20} />}

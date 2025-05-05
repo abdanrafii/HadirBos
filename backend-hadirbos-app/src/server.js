@@ -1,49 +1,60 @@
 // server/server.js
-const express = require("express");
-const cors = require("cors");
-const dotenv = require("dotenv");
-const connectDB = require("./config/db");
-require("./scheduler/autoAbsent");
+const express = require("express")
+const cors = require("cors")
+const dotenv = require("dotenv")
+const fileUpload = require("express-fileupload")
+const connectDB = require("./config/db")
+require("./scheduler/autoAbsent")
 
 // Route files
-const authRoutes = require("./routes/authRoutes");
-const userRoutes = require("./routes/userRoutes");
-const attendanceRoutes = require("./routes/attendanceRoutes");
+const authRoutes = require("./routes/authRoutes")
+const userRoutes = require("./routes/userRoutes")
+const attendanceRoutes = require("./routes/attendanceRoutes")
+const submissionRoutes = require("./routes/submissionRoutes")
+const fileRoutes = require("./routes/fileRoutes")
 
 // Load env vars
-dotenv.config();
+dotenv.config()
 
-const app = express();
+const app = express()
 
 // Connect to database
-connectDB();
+connectDB()
 
 // Middleware
-app.use(express.json());
-app.use(cors());
+app.use(express.json())
+app.use(cors())
+app.use(
+  fileUpload({
+    createParentPath: true,
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+  }),
+)
 
 // Mount routes
-app.use("/api/auth", authRoutes);
-app.use("/api/users", userRoutes);
-app.use("/api/attendance", attendanceRoutes);
+app.use("/api/auth", authRoutes)
+app.use("/api/users", userRoutes)
+app.use("/api/attendance", attendanceRoutes)
+app.use("/api/submissions", submissionRoutes)
+app.use("/api/files", fileRoutes)
 
 // Basic route
 app.get("/", (req, res) => {
-  res.send("API is running...");
-});
+  res.send("API is running...")
+})
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
-  res.status(statusCode);
+  const statusCode = res.statusCode === 200 ? 500 : res.statusCode
+  res.status(statusCode)
   res.json({
     message: err.message,
     stack: process.env.NODE_ENV === "production" ? null : err.stack,
-  });
-});
+  })
+})
 
 // Start server
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5000
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+  console.log(`Server running on port ${PORT}`)
+})
