@@ -19,7 +19,7 @@ const autoAbsent = async () => {
     );
 
     if (todayHoliday || day === 0 || day === 6) {
-      console.log("Today is a holiday or weekend, skipping auto-absent.");
+      // console.log("Today is a holiday or weekend, skipping auto-absent.");
       return;
     }
 
@@ -40,7 +40,7 @@ const autoAbsent = async () => {
       }
     }
 
-    console.log("Auto-absent process completed at", today);
+    // console.log("Auto-absent process completed at", today);
   } catch (error) {
     console.error("Error during auto-absent:", error);
   }

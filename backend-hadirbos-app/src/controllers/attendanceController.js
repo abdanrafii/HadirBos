@@ -1,6 +1,8 @@
 const asyncHandler = require("express-async-handler");
 const mongoose = require("mongoose");
 const Attendance = require("../models/Attendance");
+const { getWorkingDays } = require("../scheduler/autoPayroll");
+const User = require("../models/User");
 
 // @desc    Create attendance record
 // @route   POST /api/attendance
@@ -107,55 +109,6 @@ const updateAttendance = asyncHandler(async (req, res) => {
   }
 });
 
-// @desc    Get attendance stats for current employee
-// @route   GET /api/attendance/stats
-// @access  Private
-const getAttendanceStats = asyncHandler(async (req, res) => {
-  const employeeId = req.user._id;
-
-  // Get current month range
-  const now = new Date();
-  const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-
-  // Get attendance stats for current month
-  const monthlyStats = await Attendance.aggregate([
-    {
-      $match: {
-        employeeId: new mongoose.Types.ObjectId(employeeId),
-        date: { $gte: firstDay, $lte: lastDay },
-      },
-    },
-    {
-      $group: {
-        _id: "$status",
-        count: { $sum: 1 },
-      },
-    },
-  ]);
-
-  // Convert to more readable format
-  const stats = {
-    present: 0,
-    late: 0,
-    sick: 0,
-    leave: 0,
-    absent: 0,
-    total: 0,
-  };
-
-  monthlyStats.forEach((stat) => {
-    stats[stat._id] = stat.count;
-    stats.total += stat.count;
-  });
-
-  res.json({
-    month: now.toLocaleString("default", { month: "long" }),
-    year: now.getFullYear(),
-    stats,
-  });
-});
-
 // @desc    Get all attendance records (Admin only)
 // @route   GET /api/attendance/all
 // @access  Private/Admin
@@ -172,22 +125,77 @@ const getAllAttendances = asyncHandler(async (req, res) => {
   res.json(attendances);
 });
 
-const getAttendancesByUser = asyncHandler(async (req, res) => {
-  const { month, year } = req.query;
-  const { employeeId } = req.params;
+// @desc    Get attendance stats for current employee
+// @route   GET /api/attendance/stats/employee/:employeeId
+// @access  Private
+const getAttendanceStats = asyncHandler(async (req, res) => {
+  try {
+    const { employeeId } = req.params;
+    const { month, year, period } = req.query;
 
+    // 1. Ambil date range (sudah otomatis ikut join date kalau allTime/YTD)
+    const { startDate, endDate } = await getDateRange(employeeId, month, year, period);
+
+    // 2. Hitung total hari kerja
+    const totalWorkDays = await getWorkingDays(startDate, endDate);
+
+    // 3. Ambil data absensi user dalam periode ini
+    const data = await getAttendancesByUserData(employeeId, startDate, endDate);
+
+    const safeData = data || [];
+    
+    // 4. Hitung statistik
+    const daysWorked = safeData.filter(
+      (record) => record.status !== "weekend"
+    ).length;
+
+    const stats = {
+      present: safeData.filter((record) => record.status === "present").length,
+      absent: safeData.filter((record) => record.status === "absent").length,
+      leave: safeData.filter((record) => record.status === "leave").length,
+      late: safeData.filter((record) => record.status === "late").length,
+      sick: safeData.filter((record) => record.status === "sick").length,
+      daysWorked,
+      totalWorkDays,
+
+      // 5. Hitung persentase kehadiran (present / totalWorkDays)
+      attendanceRate:
+        totalWorkDays > 0
+          ? (
+              (safeData.filter((r) => r.status === "present").length / totalWorkDays) * 100
+            ).toFixed(2)
+          : "0.00",
+    };
+
+    res.json(stats);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+
+// @desc    Get attendance stats for current employee
+// @route   GET /api/attendance/employee/:employeeId
+// @access  Private
+const getAttendancesByUser = asyncHandler(async (req, res) => {
+  try {
+    const { employeeId } = req.params;
+    const { month, year, period } = req.query;
+
+    const { startDate, endDate } = await getDateRange(employeeId, month, year, period);
+
+    const data = await getAttendancesByUserData(employeeId, startDate, endDate);
+
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+const getAttendancesByUserData = async (employeeId, startDate, endDate) => {
   const query = { employeeId: employeeId };
 
-  if (month && year) {
-    const startDate = new Date(year, month - 1, 1);
-    const endDate = new Date(year, month, 0, 23, 59, 59, 999);
-    query.createdAt = {
-      $gte: startDate,
-      $lte: endDate,
-    };
-  } else if (year && !month) {
-    const startDate = new Date(year, 0, 1);
-    const endDate = new Date(year, 11, 31, 23, 59, 59, 999);
+  if (startDate && endDate) {
     query.createdAt = {
       $gte: startDate,
       $lte: endDate,
@@ -195,9 +203,37 @@ const getAttendancesByUser = asyncHandler(async (req, res) => {
   }
 
   const attendances = await Attendance.find(query);
+  return attendances;
+};
 
-  res.json(attendances);
-});
+const getDateRange = async (employeeId, month, year, period) => {
+  let startDate = null;
+  let endDate = null;
+  const today = new Date();
+
+  const employee = await User.findById(employeeId);
+  const joinDate = employee ? new Date(employee.joinDate) : null;
+
+  if (!joinDate) {
+    throw new Error("Employee join date not found.");
+  }
+
+  if (month && year) {
+    startDate = new Date(year, month - 1, 1);
+    endDate = new Date(year, month, 0, 23, 59, 59, 999);
+  } else if (period === "ytd") {
+    startDate =
+      joinDate > new Date(today.getFullYear(), 0, 1)
+        ? joinDate
+        : new Date(today.getFullYear(), 0, 1);
+    endDate = today;
+  } else if (period === "allTime" || !period) {
+    startDate = joinDate;
+    endDate = today;
+  }
+
+  return { startDate, endDate };
+};
 
 module.exports = {
   getAllAttendances,

@@ -11,6 +11,8 @@ import ProtectedRoute from "./utils/protectedRoute"
 import AttendancePage from "./pages/AdminHR/attendance/AttendancePage"
 import SubmissionsPage from "./pages/AdminHR/submissions/SubmissionsPage"
 import SubmissionDetailPage from "./pages/AdminHR/submissions/SubmissionDetailPage"
+import PayrollPage from "./pages/AdminHR/payroll/PayrollPage";
+import EditPayrollPage from "./pages/AdminHR/payroll/EditPayrollPage";
 
 function App() {
   return (
@@ -54,6 +56,16 @@ function App() {
             </AdminLayout>
           }
         />
+        <Route
+          path="/admin/payroll"
+          element={
+            <AdminLayout showSearch={true}>
+              <PayrollPage />
+            </AdminLayout>
+          }
+        />
+
+        <Route path="admin/payroll/edit/:id" element={<EditPayrollPage />} />
       </Route>
 
       {/* Employee Protected Route */}

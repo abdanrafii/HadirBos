@@ -1,10 +1,11 @@
 // server/server.js
-const express = require("express")
-const cors = require("cors")
-const dotenv = require("dotenv")
-const fileUpload = require("express-fileupload")
-const connectDB = require("./config/db")
-require("./scheduler/autoAbsent")
+const express = require("express");
+const cors = require("cors");
+const dotenv = require("dotenv");
+const connectDB = require("./config/db");
+const fileUpload = require("express-fileupload");
+require("./scheduler/autoAbsent");
+require("./scheduler/autoPayroll");
 
 // Route files
 const authRoutes = require("./routes/authRoutes")
@@ -12,6 +13,7 @@ const userRoutes = require("./routes/userRoutes")
 const attendanceRoutes = require("./routes/attendanceRoutes")
 const submissionRoutes = require("./routes/submissionRoutes")
 const fileRoutes = require("./routes/fileRoutes")
+const payrollRoutes = require("./routes/payrollRoutes");
 
 // Load env vars
 dotenv.config()
@@ -37,6 +39,7 @@ app.use("/api/users", userRoutes)
 app.use("/api/attendance", attendanceRoutes)
 app.use("/api/submissions", submissionRoutes)
 app.use("/api/files", fileRoutes)
+app.use("/api/payroll", payrollRoutes);
 
 // Basic route
 app.get("/", (req, res) => {

@@ -33,6 +33,19 @@ const UserSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  baseSalary: {
+    type: Number,
+    required: true,
+  },
+  phone: {
+    type: String,
+  },
+  address: {
+    type: String,
+  },
+  accountNumber: {
+    type: String,
+  },
   joinDate: {
     type: Date,
     default: Date.now,
@@ -61,6 +74,7 @@ UserSchema.pre(
     const userId = this._id;
     try {
       await mongoose.model("Attendance").deleteMany({ employeeId: userId });
+      await mongoose.model("Payroll").deleteMany({ employeeId: userId });
       next();
     } catch (err) {
       next(err);
