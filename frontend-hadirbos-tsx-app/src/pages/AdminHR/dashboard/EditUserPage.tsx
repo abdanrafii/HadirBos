@@ -8,6 +8,11 @@ import {
   Award,
   ChevronLeft,
   ChevronDown,
+  DollarSign,
+  Phone,
+  Building,
+  MapPin,
+  CreditCard,
 } from "lucide-react";
 import { UserData } from "../../../types/user";
 import { getCurrentUser } from "../../../services/authService";
@@ -23,6 +28,10 @@ const EditUserPage = () => {
     role: "employee",
     department: "",
     position: "",
+    baseSalary: 0,
+    phone: "",
+    address: "",
+    accountNumber: "",
   });
 
   const [error, setError] = useState("");
@@ -32,14 +41,15 @@ const EditUserPage = () => {
   const navigate = useNavigate();
   const dataLoaded = useRef(false);
   const userInfo = getCurrentUser();
-  const { name, email, password, role, department, position } = formData;
+  const { name, email, password, role, department, position, baseSalary, phone, address, accountNumber } =
+    formData;
 
   useEffect(() => {
     const fetchUser = async () => {
       if (dataLoaded.current) return;
 
       try {
-        const { data } = await getUserById(id, userInfo.token);
+        const data = await getUserById(id, userInfo.token);
         setOriginalUser(data);
         setFormData({
           name: data.name || "",
@@ -48,6 +58,10 @@ const EditUserPage = () => {
           role: data.role || "employee",
           department: data.department || "",
           position: data.position || "",
+          baseSalary: data.baseSalary || 0,
+          phone: data.phone || "",
+          address: data.address || "",
+          accountNumber: data.accountNumber || "",
         });
         dataLoaded.current = true;
       } catch (error: unknown) {
@@ -83,6 +97,12 @@ const EditUserPage = () => {
       if (department !== originalUser?.department)
         updateData.department = department;
       if (position !== originalUser?.position) updateData.position = position;
+      if (originalUser?.baseSalary !== formData.baseSalary)
+        updateData.baseSalary = formData.baseSalary;
+      if (phone !== originalUser?.phone) updateData.phone = phone;
+      if (address !== originalUser?.address) updateData.address = address;
+      if (accountNumber !== originalUser?.accountNumber)
+        updateData.accountNumber = accountNumber;
 
       await updateUser(id, updateData, userInfo.token);
       navigate("/admin/dashboard");
@@ -231,7 +251,7 @@ const EditUserPage = () => {
                     htmlFor="department"
                     className="text-gray-700 font-semibold mb-2 flex items-center"
                   >
-                    <Briefcase className="mr-2 w-5 h-5 text-indigo-600" />
+                    <Building className="mr-2 w-5 h-5 text-indigo-600" />
                     Department
                   </label>
                   <input
@@ -255,7 +275,7 @@ const EditUserPage = () => {
                     htmlFor="position"
                     className="text-gray-700 font-semibold mb-2 flex items-center"
                   >
-                    <Award className="mr-2 w-5 h-5 text-indigo-600" />
+                    <Briefcase className="mr-2 w-5 h-5 text-indigo-600" />
                     Position
                   </label>
                   <input
@@ -270,6 +290,106 @@ const EditUserPage = () => {
                   {originalUser && (
                     <p className="text-xs text-gray-500 mt-1">
                       Current: {originalUser.position}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <label
+                    htmlFor="phone"
+                    className="text-gray-700 font-semibold mb-2 flex items-center"
+                  >
+                    <Phone className="mr-2 w-5 h-5 text-indigo-600" />
+                    Phone Number
+                  </label>
+                  <input
+                    type="number"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
+                    id="phone"
+                    name="phone"
+                    value={phone}
+                    onChange={onChange}
+                    placeholder="Enter phone number"
+                  />
+                  {originalUser && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Current: {originalUser.phone}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="baseSalary"
+                    className="text-gray-700 font-semibold mb-2 flex items-center"
+                  >
+                    <DollarSign className="mr-2 w-5 h-5 text-indigo-600" />
+                    Base Salary
+                  </label>
+                  <input
+                    type="number"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
+                    id="baseSalary"
+                    name="baseSalary"
+                    value={baseSalary}
+                    onChange={onChange}
+                    placeholder="Enter base salary"
+                  />
+                  {originalUser && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Current: {originalUser.baseSalary}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <label
+                    htmlFor="address"
+                    className="text-gray-700 font-semibold mb-2 flex items-center"
+                  >
+                    <MapPin className="mr-2 w-5 h-5 text-indigo-600" />
+                    Address
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
+                    id="address"
+                    name="address"
+                    value={address}
+                    onChange={onChange}
+                    placeholder="Enter address"
+                  />
+                  {originalUser && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Current: {originalUser.address}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="accountNumber"
+                    className="text-gray-700 font-semibold mb-2 flex items-center"
+                  >
+                    <CreditCard className="mr-2 w-5 h-5 text-indigo-600" />
+                    Account Number
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
+                    id="accountNumber"
+                    name="accountNumber"
+                    value={accountNumber}
+                    onChange={onChange}
+                    placeholder="Enter account mumber"
+                  />
+                  {originalUser && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Current: {originalUser.accountNumber}
                     </p>
                   )}
                 </div>

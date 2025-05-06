@@ -4,11 +4,13 @@ const cors = require("cors");
 const dotenv = require("dotenv");
 const connectDB = require("./config/db");
 require("./scheduler/autoAbsent");
+require("./scheduler/autoPayroll");
 
 // Route files
 const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
 const attendanceRoutes = require("./routes/attendanceRoutes");
+const payrollRoutes = require("./routes/payrollRoutes");
 
 // Load env vars
 dotenv.config();
@@ -26,6 +28,7 @@ app.use(cors());
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/attendance", attendanceRoutes);
+app.use("/api/payroll", payrollRoutes);
 
 // Basic route
 app.get("/", (req, res) => {

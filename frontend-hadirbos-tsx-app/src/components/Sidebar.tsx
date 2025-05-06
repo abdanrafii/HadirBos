@@ -116,10 +116,10 @@ const Sidebar = ({
         />
         <SidebarItem
           icon={<ChartNoAxesColumn size={20} />}
-          text="Reports"
-          active={isActive("/admin/reports")}
+          text="Payroll"
+          active={isActive("/admin/payroll")}
           collapsed={!sidebarOpen}
-          onClick={() => handlePageChange("/admin/reports")}
+          onClick={() => handlePageChange("/admin/payroll")}
         />
         <SidebarItem
           icon={<FileText size={20} />}

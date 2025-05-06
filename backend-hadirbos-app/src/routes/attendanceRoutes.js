@@ -18,7 +18,7 @@ router.route('/')
 
 router.get('/all', protect, getAllAttendances);
 
-router.route('/stats')
+router.route('/stats/employee/:employeeId')
   .get(protect, getAttendanceStats);
 
 router.route('/:id')

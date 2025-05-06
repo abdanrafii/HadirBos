@@ -87,13 +87,14 @@ export const createUser = async (
 };
 
 export const getUserById = async (id: string | undefined, token: string) => {
+  const config = {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  };
   try {
-    const config = {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    };
-    return await axios.get(`${BASE_URL}/${id}`, config);
+    const response = await axios.get(`${BASE_URL}/${id}`, config);
+    return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
       throw new Error(error.response?.data?.message || "Failed to fetch user");

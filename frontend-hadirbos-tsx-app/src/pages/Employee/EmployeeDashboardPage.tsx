@@ -4,12 +4,15 @@ import { User } from "../../types/user";
 import { Attendance } from "../../types/attendance";
 import { getCurrentUser, getProfile, logout } from "../../services/authService";
 import Loading from "../../components/Loading";
-import { LogOut, Users } from "lucide-react";
+import { DollarSign, LogOut, ScrollText, Users } from "lucide-react";
 import {
   getAttendance,
   postAttendance,
 } from "../../services/attendanceService";
 import Avatar from "../../components/Avatar";
+import { Payroll } from "../../types/payroll";
+import { getPayrollByEmployeeId } from "../../services/payrollService";
+import PaySlip from "../AdminHR/payroll/Payslip";
 
 const EmployeeDashboardPage = () => {
   const [profile, setProfile] = useState<User | null>(null);
@@ -25,7 +28,10 @@ const EmployeeDashboardPage = () => {
   const [todayAttendance, setTodayAttendance] = useState<Attendance | null>(
     null
   );
-  const [availableStatusOptions, setAvailableStatusOptions] = useState<string[]>([]);
+  const [availableStatusOptions, setAvailableStatusOptions] = useState<
+    string[]
+  >([]);
+  const [payrollData, setPayrollData] = useState<Payroll[]>([]);
 
   const navigate = useNavigate();
   const userInfo = getCurrentUser();
@@ -34,7 +40,7 @@ const EmployeeDashboardPage = () => {
   const updateStatusOptions = () => {
     const now = new Date();
     const hours = now.getHours();
-    
+
     // If time is between 8 AM and 10 AM (inclusive), show "present", "sick", "leave"
     if (hours >= 8 && hours < 10) {
       setAvailableStatusOptions(["present", "sick", "leave"]);
@@ -42,7 +48,7 @@ const EmployeeDashboardPage = () => {
       if (attendanceStatus === "late") {
         setAttendanceStatus("present");
       }
-    } 
+    }
     // After 10 AM, show "late", "sick", "leave"
     else {
       setAvailableStatusOptions(["late", "sick", "leave"]);
@@ -164,6 +170,64 @@ const EmployeeDashboardPage = () => {
     }
   };
 
+  const idrFormatter = (value: number) => {
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
+    }).format(value);
+  };
+
+  useEffect(() => {
+    const fetchPayrollData = async () => {
+      try {
+        setLoading(true);
+        const response = await getPayrollByEmployeeId(
+          userInfo.token,
+          userInfo._id
+        );
+        setPayrollData(response);
+        console.log(response);
+      } catch (error) {
+        if (error instanceof Error) {
+          setError(error.message);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPayrollData();
+  }, [userInfo._id, userInfo.token]);
+
+  const [isPayslipModalOpen, setIsPayslipModalOpen] = useState(false);
+ const [payrollSelected, setPayrollSelected] = useState<Payroll>({
+   _id: "",
+   employeeId: {
+     _id: "",
+     name: "",
+     department: "",
+     position: "",
+     baseSalary: 0,
+   },
+   status: "unpaid", // default unpaid
+   month: new Date().getMonth() + 1, // bulan sekarang (1-12)
+   year: new Date().getFullYear(), // tahun sekarang
+   deductions: 0,
+   bonus: 0,
+   tax: 0,
+   totalAmount: 0,
+   paymentDate: new Date(),
+   paymentMethod: "cash",
+   paymentReference: "",
+   notes: "",
+ });
+ 
+  const handlePayslipModalOpen = (record: Payroll) => {
+    setPayrollSelected(record);
+    setIsPayslipModalOpen(true);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -225,7 +289,7 @@ const EmployeeDashboardPage = () => {
                 <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-6 flex flex-col items-center">
                   <Avatar
                     name={profile.name}
-                    size={24}
+                    size={"lg"}
                     className="font-bold text-3xl p-5"
                   />
                   <h3 className="text-xl font-bold text-white mt-4">
@@ -317,6 +381,17 @@ const EmployeeDashboardPage = () => {
                         />
                       </svg>
                       <span>Attendance</span>
+                    </div>
+                    <div
+                      className={`flex items-center p-2 rounded cursor-pointer ${
+                        activeTab === "payroll"
+                          ? "bg-blue-50 text-blue-700"
+                          : "hover:bg-gray-50 text-gray-700"
+                      }`}
+                      onClick={() => setActiveTab("payroll")}
+                    >
+                      <DollarSign className="h-5 w-5 mr-3" />
+                      <span>Payroll</span>
                     </div>
                     <div
                       className={`flex items-center p-2 rounded cursor-pointer ${
@@ -430,17 +505,19 @@ const EmployeeDashboardPage = () => {
                             >
                               {availableStatusOptions.map((status) => (
                                 <option key={status} value={status}>
-                                  {status.charAt(0).toUpperCase() + status.slice(1)}
+                                  {status.charAt(0).toUpperCase() +
+                                    status.slice(1)}
                                 </option>
                               ))}
                             </select>
-                            
+
                             {/* Display current time notification */}
                             <div className="mt-2 text-sm text-gray-500">
                               Current time: {new Date().toLocaleTimeString()}
                               {new Date().getHours() >= 10 && (
                                 <p className="text-yellow-600 mt-1">
-                                  Note: Attendance after 10:00 AM is marked as "Late"
+                                  Note: Attendance after 10:00 AM is marked as
+                                  "Late"
                                 </p>
                               )}
                             </div>
@@ -601,6 +678,108 @@ const EmployeeDashboardPage = () => {
                 </div>
               )}
 
+              {activeTab === "payroll" && (
+                <div className="bg-white rounded-lg shadow-md overflow-hidden">
+                  {/* Header */}
+                  <div className="bg-gradient-to-r from-blue-500 to-indigo-600 px-6 py-4 flex items-center justify-between">
+                    <h3 className="text-xl font-bold text-white flex items-center">
+                      <DollarSign className="h-5 w-5 mr-2" />
+                      Payroll History
+                    </h3>
+                  </div>
+
+                  {/* Table */}
+                  <div className="p-6 overflow-x-auto">
+                    {payrollData.length > 0 ? (
+                      <table className="min-w-full bg-white">
+                        <thead>
+                          <tr className="bg-gray-50 border-b">
+                            <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Period
+                            </th>
+                            <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Amount
+                            </th>
+                            <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Status
+                            </th>
+                            <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Payment Date
+                            </th>
+                            <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Action
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-200">
+                          {payrollData.map((payroll) => (
+                            <tr key={payroll._id} className="hover:bg-gray-50">
+                              {/* Period */}
+                              <td className="py-3 px-4 text-sm text-gray-700">
+                                {`${new Date(
+                                  payroll.year,
+                                  payroll.month - 1
+                                ).toLocaleString("en-GB", {
+                                  month: "long",
+                                })} ${payroll.year}`}
+                              </td>
+
+                              {/* Amount */}
+                              <td className="py-3 px-4 text-sm text-gray-700">
+                                {idrFormatter(payroll.totalAmount)}
+                              </td>
+
+                              {/* Status */}
+                              <td className="py-3 px-4">
+                                <span
+                                  className={`inline-block px-2 py-1 text-xs font-semibold rounded-full ${
+                                    payroll.status === "paid"
+                                      ? "bg-green-100 text-green-800"
+                                      : "bg-yellow-100 text-yellow-800"
+                                  }`}
+                                >
+                                  {payroll.status.charAt(0).toUpperCase() +
+                                    payroll.status.slice(1)}
+                                </span>
+                              </td>
+
+                              <td className="py-3 px-4 text-sm text-gray-700">
+                                {payroll.paymentDate
+                                  ? new Date(
+                                      payroll.paymentDate
+                                    ).toLocaleDateString("en-US", {
+                                      day: "numeric",
+                                      month: "long",
+                                      year: "numeric",
+                                    })
+                                  : "-"}
+                              </td>
+
+                              {/* Download Button */}
+                              <td className="py-3 px-4">
+                                <button
+                                  onClick={() =>
+                                    handlePayslipModalOpen(payroll)
+                                  }
+                                  className="bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold py-2 px-3 rounded flex items-center gap-1"
+                                >
+                                  <ScrollText className="w-4 h-4" />
+                                  Payslip
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    ) : (
+                      <div className="text-center py-4 text-gray-500">
+                        No payroll records found.
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {activeTab === "profile" && (
                 <div className="bg-white rounded-lg shadow-md overflow-hidden">
                   <div className="bg-gradient-to-r from-blue-500 to-indigo-600 px-6 py-4">
@@ -650,6 +829,14 @@ const EmployeeDashboardPage = () => {
                               "EMP-" + Math.floor(Math.random() * 10000)}
                           </p>
                         </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-500 mb-1">
+                            BASE SALARY
+                          </label>
+                          <p className="text-gray-800 font-medium">
+                            {profile.baseSalary}
+                          </p>
+                        </div>
                       </div>
                       <div className="space-y-4">
                         <div>
@@ -674,6 +861,14 @@ const EmployeeDashboardPage = () => {
                           </label>
                           <p className="text-gray-800 font-medium">
                             {formatDate(profile.joinDate)}
+                          </p>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-500 mb-1">
+                            ACCOUNT NUMBER
+                          </label>
+                          <p className="text-gray-800 font-medium">
+                            {profile.accountNumber || "-"}
                           </p>
                         </div>
                       </div>
@@ -747,6 +942,13 @@ const EmployeeDashboardPage = () => {
           </div>
         )}
       </div>
+
+      {isPayslipModalOpen && (
+        <PaySlip
+          payrollRecord={payrollSelected}
+          onClose={() => setIsPayslipModalOpen(false)}
+        />
+      )}
     </div>
   );
 };

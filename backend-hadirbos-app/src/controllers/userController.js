@@ -6,15 +6,26 @@ const User = require('../models/User');
 // @access  Private/Admin
 exports.createUser = async (req, res) => {
   try {
-    const { name, email, password, role, department, position } = req.body;
+    const {
+      name,
+      email,
+      password,
+      role,
+      department,
+      position,
+      phone,
+      address,
+      baseSalary,
+      accountNumber
+    } = req.body;
 
     // Check if user already exists
     const userExists = await User.findOne({ email });
     if (userExists) {
-      return res.status(400).json({ message: 'User already exists' });
+      return res.status(400).json({ message: "User already exists" });
     }
 
-    // Create user
+    // Create user with optional fields (phone and address)
     const user = await User.create({
       name,
       email,
@@ -22,7 +33,11 @@ exports.createUser = async (req, res) => {
       role,
       department,
       position,
-      status: 'active'
+      phone: phone || undefined, 
+      address: address || undefined,
+      baseSalary,
+      accountNumber: accountNumber || undefined,
+      status: "active",
     });
 
     if (user) {
@@ -32,16 +47,21 @@ exports.createUser = async (req, res) => {
         email: user.email,
         role: user.role,
         department: user.department,
-        position: user.position
+        baseSalary: user.baseSalary,
+        position: user.position,
+        phone: user.phone,
+        address: user.address,
+        accountNumber: user.accountNumber,
       });
     } else {
-      res.status(400).json({ message: 'Invalid user data' });
+      res.status(400).json({ message: "Invalid user data" });
     }
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: "Server error" });
   }
 };
+
 
 // @desc    Get all users
 // @route   GET /api/users
@@ -99,8 +119,15 @@ exports.updateUser = async (req, res) => {
       user.password = req.body.password; 
     }
 
+    if (req.body.baseSalary !== undefined) user.baseSalary = req.body.baseSalary;
+
+    if (req.body.phone !== undefined) user.phone = req.body.phone;
+    if (req.body.address !== undefined) user.address = req.body.address;
+
     // Update status jika diberikan
     if (req.body.status !== undefined) user.status = req.body.status;
+
+    if (req.body.accountNumber !== undefined) user.accountNumber = req.body.accountNumber;
 
     const updatedUser = await user.save();
     
@@ -112,6 +139,9 @@ exports.updateUser = async (req, res) => {
       role: updatedUser.role,
       department: updatedUser.department,
       position: updatedUser.position,
+      phone: updatedUser.phone,
+      address: updatedUser.address,
+      baseSalary: updatedUser.baseSalary,
       status: updatedUser.status
     });
   } catch (err) {
@@ -139,7 +169,7 @@ exports.deleteUser = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    await User.deleteOne({ _id: req.params.id });
+    await user.deleteOne();
     res.json({ message: "User removed" });
   } catch (err) {
     console.error(err);

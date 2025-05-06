@@ -5,6 +5,10 @@ export type UserBase = {
   role: string;
   department: string;
   position: string;
+  baseSalary: number;
+  phone: string;
+  address: string;
+  accountNumber: string;
 };
 
 export type UserData = UserBase & {
@@ -19,6 +23,4 @@ export type User = UserBase & {
   status: string;
   joinDate: string;
   createdAt: string;
-  phone: string;
-  address: string;
 };

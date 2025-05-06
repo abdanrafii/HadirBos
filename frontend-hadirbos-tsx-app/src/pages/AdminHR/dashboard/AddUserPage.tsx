@@ -8,6 +8,11 @@ import {
   Award,
   ChevronLeft,
   ChevronDown,
+  Building,
+  Phone,
+  DollarSign,
+  MapPin,
+  CreditCard,
 } from "lucide-react";
 import { getCurrentUser } from "../../../services/authService";
 import { createUser } from "../../../services/userService";
@@ -20,12 +25,17 @@ const AddUserPage = () => {
     role: "employee",
     department: "",
     position: "",
+    phone: "",
+    address: "",
+    baseSalary: 0,
+    accountNumber: "",
   });
   const userInfo = getCurrentUser();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { name, email, password, role, department, position } = formData;
+  const { name, email, password, role, department, position, phone, address, baseSalary, accountNumber } =
+    formData;
 
   const onChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -163,7 +173,7 @@ const AddUserPage = () => {
                     htmlFor="department"
                     className=" text-gray-700 font-semibold mb-2 flex items-center"
                   >
-                    <Briefcase className="mr-2 w-5 h-5 text-indigo-600" />{" "}
+                    <Building className="mr-2 w-5 h-5 text-indigo-600" />{" "}
                     Department
                   </label>
                   <input
@@ -183,7 +193,8 @@ const AddUserPage = () => {
                     htmlFor="position"
                     className=" text-gray-700 font-semibold mb-2 flex items-center"
                   >
-                    <Award className="mr-2 w-5 h-5 text-indigo-600" /> Position
+                    <Briefcase className="mr-2 w-5 h-5 text-indigo-600" />{" "}
+                    Position
                   </label>
                   <input
                     type="text"
@@ -194,6 +205,88 @@ const AddUserPage = () => {
                     onChange={onChange}
                     required
                     placeholder="Enter job position"
+                  />
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <label
+                    htmlFor="phone"
+                    className=" text-gray-700 font-semibold mb-2 flex items-center"
+                  >
+                    <Phone className="mr-2 w-5 h-5 text-indigo-600" /> Phone
+                    Number
+                  </label>
+                  <input
+                    type="number"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
+                    id="phone"
+                    name="phone"
+                    value={phone}
+                    onChange={onChange}
+                    required
+                    placeholder="Enter phone number"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="baseSalary"
+                    className=" text-gray-700 font-semibold mb-2 flex items-center"
+                  >
+                    <DollarSign className="mr-2 w-5 h-5 text-indigo-600" /> Base
+                    Salary
+                  </label>
+                  <input
+                    type="number"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
+                    id="baseSalary"
+                    name="baseSalary"
+                    value={baseSalary}
+                    onChange={onChange}
+                    required
+                    placeholder="Enter base salary"
+                  />
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <label
+                    htmlFor="address"
+                    className=" text-gray-700 font-semibold mb-2 flex items-center"
+                  >
+                    <MapPin className="mr-2 w-5 h-5 text-indigo-600" /> Address
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
+                    id="address"
+                    name="address"
+                    value={address}
+                    onChange={onChange}
+                    required
+                    placeholder="Enter address"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="accountNumber"
+                    className=" text-gray-700 font-semibold mb-2 flex items-center"
+                  >
+                    <CreditCard className="mr-2 w-5 h-5 text-indigo-600" /> Account Number
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
+                    id="accountNumber"
+                    name="accountNumber"
+                    value={accountNumber}
+                    onChange={onChange}
+                    required
+                    placeholder="Enter account number"
                   />
                 </div>
               </div>

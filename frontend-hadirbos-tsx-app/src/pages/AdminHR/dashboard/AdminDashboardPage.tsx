@@ -1,5 +1,12 @@
 import { useState, useEffect, useContext } from "react";
-import { Users, PlusCircle, ChartNoAxesColumn, FileText, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Users,
+  PlusCircle,
+  ChartNoAxesColumn,
+  FileText,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import StatsCard from "../../../components/StatsCard";
 import DeleteModal from "../../../components/DeleteModal";
 import { useNavigate } from "react-router";
@@ -7,15 +14,23 @@ import { SearchContext } from "../../../context/SearchContext";
 import Loading from "../../../components/Loading";
 import { UserInfo as User } from "../../../types/user";
 import { getCurrentUser } from "../../../services/authService";
-import { deleteUser, getUsers } from "../../../services/userService";
+import {
+  deleteUser,
+  getUserById,
+  getUsers,
+} from "../../../services/userService";
 import Avatar from "../../../components/Avatar";
 
 const AdminDashboardPage = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadDetail, setLoadDetail] = useState(false);
   const [error, setError] = useState("");
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [detailUser, setDetailUser] = useState<User | null>(null);
+  const [modalDetailOpen, setModalDetailOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<string>("");
   const navigate = useNavigate();
   const userInfo = getCurrentUser();
   const searchTerm = useContext(SearchContext).searchTerm;
@@ -23,6 +38,7 @@ const AdminDashboardPage = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
+        setLoading(true);
         const data = await getUsers(userInfo.token);
         const employeeUsers = data.filter(
           (user: User) => user.role === "employee"
@@ -39,6 +55,24 @@ const AdminDashboardPage = () => {
 
     fetchUsers();
   }, [userInfo.token]);
+
+  useEffect(() => {
+    const fetchDetailUsers = async () => {
+      try {
+        setLoadDetail(true);
+        const data = await getUserById(selectedUser, userInfo.token);
+        setDetailUser(data);
+      } catch (error) {
+        if (error instanceof Error) {
+          setError(error.message);
+        }
+      } finally {
+        setLoadDetail(false);
+      }
+    };
+
+    fetchDetailUsers();
+  }, [selectedUser, userInfo.token]);
 
   const handleDeleteClick = (user: User) => {
     setUserToDelete(user);
@@ -161,6 +195,9 @@ const AdminDashboardPage = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Position
                   </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                    Base Salary
+                  </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
                   </th>
@@ -195,7 +232,19 @@ const AdminDashboardPage = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {user.position}
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {user.baseSalary}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <button
+                        className="text-green-600 hover:text-green-900 mr-3"
+                        onClick={() => {
+                          setSelectedUser(user._id);
+                          setModalDetailOpen(true);
+                        }}
+                      >
+                        Detail
+                      </button>
                       <button
                         className="text-indigo-600 hover:text-indigo-900 mr-3"
                         onClick={() => navigate(`/admin/edit-user/${user._id}`)}
@@ -258,6 +307,138 @@ const AdminDashboardPage = () => {
           onDelete={handleDeleteUser}
           closeModal={() => setIsModalOpen(false)}
         />
+      )}
+
+      {modalDetailOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white p-4 md:p-6 rounded-lg shadow-xl max-w-lg w-full mx-auto border border-gray-200">
+            {loadDetail ? (
+              <Loading />
+            ) : (
+              (() => {
+                const employee = detailUser;
+                return (
+                  <>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center">
+                        <Avatar name={employee?.name} className="mr-3" />
+                        <div>
+                          <h3 className="text-lg md:text-xl font-bold text-gray-800">
+                            {employee?.name}
+                          </h3>
+                          {/* <p className="text-xs md:text-sm text-gray-600">
+                            {employee?.email}
+                          </p> */}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4 mb-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="bg-gray-50 p-3 rounded-lg">
+                          <div className="text-xs md:text-sm text-gray-600">
+                            Role
+                          </div>
+                          <div className="text-base font-medium text-gray-800">
+                            {employee?.role || "N/A"}
+                          </div>
+                        </div>
+
+                        <div className="bg-gray-50 p-3 rounded-lg">
+                          <div className="text-xs md:text-sm text-gray-600">
+                            Department
+                          </div>
+                          <div className="text-base font-medium text-gray-800">
+                            {employee?.department || "N/A"}
+                          </div>
+                        </div>
+
+                        <div className="bg-gray-50 p-3 rounded-lg">
+                          <div className="text-xs md:text-sm text-gray-600">
+                            Position
+                          </div>
+                          <div className="text-base font-medium text-gray-800">
+                            {employee?.position || "N/A"}
+                          </div>
+                        </div>
+
+                        <div className="bg-gray-50 p-3 rounded-lg">
+                          <div className="text-xs md:text-sm text-gray-600">
+                            Base Salary
+                          </div>
+                          <div className="text-base font-medium text-gray-800">
+                            {employee?.baseSalary
+                              ? `Rp ${employee.baseSalary.toLocaleString()}`
+                              : "N/A"}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="bg-gray-50 p-3 rounded-lg">
+                        <div className="text-xs md:text-sm text-gray-600">
+                          Email
+                        </div>
+                        <div className="text-base font-medium text-gray-800">
+                          {employee?.email || "N/A"}
+                        </div>
+                      </div>
+
+                      <div className="bg-gray-50 p-3 rounded-lg">
+                        <div className="text-xs md:text-sm text-gray-600">
+                          Account Number
+                        </div>
+                        <div className="text-base font-medium text-gray-800">
+                          {employee?.accountNumber || "N/A"}
+                        </div>
+                      </div>
+
+                      <div className="bg-gray-50 p-3 rounded-lg">
+                        <div className="text-xs md:text-sm text-gray-600">
+                          Phone
+                        </div>
+                        <div className="text-base font-medium text-gray-800">
+                          {employee?.phone || "N/A"}
+                        </div>
+                      </div>
+
+                      <div className="bg-gray-50 p-3 rounded-lg">
+                        <div className="text-xs md:text-sm text-gray-600">
+                          Address
+                        </div>
+                        <div className="text-base font-medium text-gray-800">
+                          {employee?.address || "N/A"}
+                        </div>
+                      </div>
+                      {/* 
+                      <div className="bg-gray-50 p-3 rounded-lg">
+                        <div className="text-xs md:text-sm text-gray-600">
+                          Password
+                        </div>
+                        <div className="flex items-center">
+                          <div className="text-base font-medium text-gray-800 mr-2">
+                            ••••••••
+                          </div>
+                          <button className="text-xs bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 py-1 rounded">
+                            Show
+                          </button>
+                        </div>
+                      </div> */}
+                    </div>
+
+                    <div className="flex justify-between">
+                      <button
+                        className="px-3 md:px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors text-sm md:text-base"
+                        onClick={() => setModalDetailOpen(false)}
+                      >
+                        Close
+                      </button>
+                    </div>
+                  </>
+                );
+              })()
+            )}
+          </div>
+        </div>
       )}
     </>
   );

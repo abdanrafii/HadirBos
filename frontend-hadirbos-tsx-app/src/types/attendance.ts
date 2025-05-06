@@ -19,3 +19,14 @@ export type AttendanceStatus =
   | "late"
   | "sick"
   | "weekend";
+
+export type AttendanceStats = {
+  present: number;
+  absent: number;
+  leave: number;
+  late: number;
+  sick: number;
+  daysWorked: number;
+  totalWorkDays: number;
+  attendanceRate: string;
+};

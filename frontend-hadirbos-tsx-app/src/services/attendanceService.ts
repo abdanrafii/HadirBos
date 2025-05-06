@@ -129,14 +129,14 @@ export const getAllAttendance = async (token: string) => {
   }
 };
 
-export const getAttendanceStats = async (token: string) => {
+export const getAttendanceStats = async (token: string, employeeId: string) => {
   const config = {
     headers: {
       Authorization: `Bearer ${token}`,
     },
   };
   try {
-    const response = await axios.get(`${BASE_URL}/attendance/stats`, config);
+    const response = await axios.get(`${BASE_URL}/attendance/stats/employee/${employeeId}`, config);
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {

@@ -606,7 +606,7 @@ const renderAbsencesView = () => {
               return (
                 <div
                   key={index}
-                  className={`p-3 md:p-4 rounded-lg border-l-4 ${colorClasses} hover:bg-opacity-80 transition-all cursor-pointer shadow-sm`}
+                  className={`p-3 md:p-4 rounded-lg border-l-4 ${colorClasses} hover:bg-gray-200 transition-all cursor-pointer shadow-sm`}
                   onClick={() =>
                     selectedEmployee
                       ? openAttendanceDetail(
