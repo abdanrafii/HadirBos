@@ -1,7 +1,3 @@
-"use client"
-
-import type React from "react"
-
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router"
 import { Calendar, FileText, Filter, Search, ChevronLeft, ChevronRight, Clock, User, X } from "lucide-react"
@@ -42,13 +38,12 @@ const SubmissionsPage = () => {
         setSubmissions(submissionsData)
 
         // Fetch stats
-        const statsData = await getSubmissionStats(userInfo.token)
+        const statsData = await getSubmissionStats(userInfo.token, undefined, undefined, "allTime")
         setStats(statsData)
 
         // Fetch employees for filter dropdown
         const employeesData = await getUsers(userInfo.token)
-        const filteredEmployees = employeesData.filter((user: UserBase) => user.role === "employee")
-        setEmployees(filteredEmployees)
+        setEmployees(employeesData)
       } catch (error) {
         if (error instanceof Error) {
           setError(error.message)

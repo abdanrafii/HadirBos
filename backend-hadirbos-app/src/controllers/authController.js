@@ -38,7 +38,6 @@ exports.login = async (req, res) => {
       token: generateToken(user._id),
     });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -54,7 +53,6 @@ exports.getUserProfile = async (req, res) => {
     }
     res.json(user);
   } catch (err) {
-    console.error(err);
     res.status(500).json({ message: "Server error" });
   }
 };

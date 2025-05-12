@@ -75,6 +75,7 @@ UserSchema.pre(
     try {
       await mongoose.model("Attendance").deleteMany({ employeeId: userId });
       await mongoose.model("Payroll").deleteMany({ employeeId: userId });
+      await mongoose.model("Submission").deleteMany({ employeeId: userId });
       next();
     } catch (err) {
       next(err);

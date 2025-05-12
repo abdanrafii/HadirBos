@@ -2,12 +2,11 @@ import { useNavigate, useLocation } from "react-router";
 import {
   Home,
   Users,
-  ChartNoAxesColumn,
   FileText,
-  Settings,
   Menu,
   LogOut,
   ClipboardList,
+  DollarSign,
 } from "lucide-react";
 import { useEffect } from "react";
 
@@ -123,7 +122,7 @@ const Sidebar = ({
           onClick={() => handlePageChange("/admin/submissions")}
         />
         <SidebarItem
-          icon={<ChartNoAxesColumn size={20} />}
+          icon={<DollarSign size={20} />}
           text="Payroll"
           active={isActive("/admin/payroll")}
           collapsed={!sidebarOpen}
@@ -131,18 +130,18 @@ const Sidebar = ({
         />
         <SidebarItem
           icon={<FileText size={20} />}
-          text="Documents"
-          active={isActive("/admin/documents")}
+          text="Reports"
+          active={isActive("/admin/reports")}
           collapsed={!sidebarOpen}
-          onClick={() => handlePageChange("/admin/documents")}
+          onClick={() => handlePageChange("/admin/reports")}
         />
-        <SidebarItem
+        {/* <SidebarItem
           icon={<Settings size={20} />}
           text="Settings"
           active={isActive("/admin/settings")}
           collapsed={!sidebarOpen}
           onClick={() => handlePageChange("/admin/settings")}
-        />
+        /> */}
 
         {/* Logout button at bottom of sidebar */}
         <SidebarItem

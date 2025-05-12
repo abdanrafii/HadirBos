@@ -1,10 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  ArrowLeft,
-  Clock,
-  CalendarDays,
-  Building,
-} from "lucide-react";
+import { ArrowLeft, Clock, CalendarDays, Building } from "lucide-react";
 import { format } from "date-fns";
 import { Payroll } from "../../../types/payroll";
 import { AttendanceStats } from "../../../types/attendance";
@@ -19,10 +14,7 @@ interface PayrollDetailProps {
   onClose: () => void;
 }
 
-const PayrollDetailModal = ({
-  payrollRecord,
-  onClose,
-}: PayrollDetailProps) => {
+const PayrollDetailModal = ({ payrollRecord, onClose }: PayrollDetailProps) => {
   const [activeTab, setActiveTab] = useState<
     "summary" | "attendance" | "payment"
   >("summary");
@@ -38,7 +30,9 @@ const PayrollDetailModal = ({
         setLoading(true);
         const data = await getAttendanceStats(
           userInfo.token,
-          payrollRecord.employeeId._id
+          payrollRecord.employeeId._id,
+          payrollRecord.month - 1,
+          payrollRecord.year
         );
         setAttendanceStats(data);
       } catch (error) {
@@ -51,7 +45,12 @@ const PayrollDetailModal = ({
     };
 
     fetchPayroll();
-  }, [userInfo.token, payrollRecord.employeeId._id]);
+  }, [
+    userInfo.token,
+    payrollRecord.employeeId._id,
+    payrollRecord.month,
+    payrollRecord.year,
+  ]);
 
   // if (isPaymentModalOpen) {
   //   return (
@@ -112,7 +111,7 @@ const PayrollDetailModal = ({
                   <div className="font-medium">
                     {new Date(
                       payrollRecord.year,
-                      payrollRecord.month,
+                      payrollRecord.month - 1,
                       1
                     ).toLocaleString("default", {
                       month: "long",
@@ -274,7 +273,7 @@ const PayrollDetailModal = ({
                           <span className="text-sm font-medium">
                             {new Date(
                               payrollRecord.year,
-                              payrollRecord.month,
+                              payrollRecord.month - 1,
                               1
                             ).toLocaleString("default", {
                               month: "long",
