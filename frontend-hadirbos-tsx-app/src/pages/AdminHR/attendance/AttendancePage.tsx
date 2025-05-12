@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useContext } from "react";
+import { useState, useEffect, useRef, useContext } from "react"
 import {
   ChevronLeft,
   ChevronRight,
@@ -10,37 +10,44 @@ import {
   CalendarDays,
   Users,
   Search,
-} from "lucide-react";
-import { format, parseISO, differenceInDays } from "date-fns";
-import { getCurrentUser } from "../../../services/authService";
+} from "lucide-react"
+import { format, parseISO, differenceInDays } from "date-fns"
+import { getCurrentUser } from "../../../services/authService"
 import {
   getAllAttendance,
   getAttendanceByEmployeeId,
   getAttendanceById,
-} from "../../../services/attendanceService";
-import { getUsers } from "../../../services/userService";
-import { UserBase } from "../../../types/user";
-import { AttendanceStatus, Attendance } from "../../../types/attendance";
-import Loading from "../../../components/Loading";
-import { SearchContext } from "../../../context/SearchContext";
-import Avatar from "../../../components/Avatar";
+  updateAttendance,
+} from "../../../services/attendanceService"
+import { getUsers } from "../../../services/userService"
+import type { UserBase } from "../../../types/user"
+import type { AttendanceStatus, Attendance } from "../../../types/attendance"
+import Loading from "../../../components/Loading"
+import { SearchContext } from "../../../context/SearchContext"
+import Avatar from "../../../components/Avatar"
 
 export default function AttendancePage() {
-  const userInfo = getCurrentUser();
-  const [error, setError] = useState<string | null>(null);
-  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
-  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
-  const [selectedEmployee, setSelectedEmployee] = useState<string | null>(null);
-  const [selectedAttendance, setSelectedAttendance] = useState<string | null>(
-    null
-  );
-  const [attendanceDetailOpen, setAttendanceDetailOpen] = useState(false);
-  const [currentView, setCurrentView] = useState<
-    "calendar" | "stats" | "absences"
-  >("calendar");
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const sidebarRef = useRef<HTMLDivElement>(null);
-  const searchTerm = useContext(SearchContext).searchTerm;
+  const userInfo = getCurrentUser()
+  const [error, setError] = useState<string | null>(null)
+  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth())
+  const [currentYear, setCurrentYear] = useState(new Date().getFullYear())
+  const [selectedEmployee, setSelectedEmployee] = useState<string | null>(null)
+  const [selectedAttendance, setSelectedAttendance] = useState<string | null>(null)
+  const [attendanceDetailOpen, setAttendanceDetailOpen] = useState(false)
+  const [currentView, setCurrentView] = useState<"calendar" | "stats" | "absences">("calendar")
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const sidebarRef = useRef<HTMLDivElement>(null)
+  const searchTerm = useContext(SearchContext).searchTerm
+
+  // First, let's add a state for editing attendance
+  const [editMode, setEditMode] = useState(false)
+  const [editFormData, setEditFormData] = useState({
+    status: "",
+    note: "",
+  })
+  const [updateLoading, setUpdateLoading] = useState(false)
+  const [updateSuccess, setUpdateSuccess] = useState(false)
+  const [updateError, setUpdateError] = useState("")
 
   // data from api
   const [loadEmployees, setLoadEmployees] = useState(false);
@@ -55,45 +62,45 @@ export default function AttendancePage() {
   const availableYears = [2022, 2023, 2024, 2025, 2026, 2027];
 
   useEffect(() => {
-    setLoadEmployees(true);
+    setLoadEmployees(true)
     const fetchUsers = async () => {
       try {
         const data = await getUsers(userInfo.token);
         setEmployees(data);
       } catch (error) {
         if (error instanceof Error) {
-          setError(error.message);
+          setError(error.message)
         }
       } finally {
-        setLoadEmployees(false);
+        setLoadEmployees(false)
       }
-    };
+    }
 
-    fetchUsers();
-  }, [userInfo.token]);
+    fetchUsers()
+  }, [userInfo.token])
 
   useEffect(() => {
-    setLoadAbsences(true);
+    setLoadAbsences(true)
     const fetchAllAttendance = async () => {
       try {
-        const response = await getAllAttendance(userInfo.token);
-        setAttendanceData(response);
+        const response = await getAllAttendance(userInfo.token)
+        setAttendanceData(response)
       } catch (error) {
         if (error instanceof Error) {
-          setError(error.message);
+          setError(error.message)
         }
       } finally {
-        setLoadAbsences(false);
+        setLoadAbsences(false)
       }
-    };
+    }
 
-    fetchAllAttendance();
-  }, [currentMonth, currentYear, userInfo.token]);
+    fetchAllAttendance()
+  }, [currentMonth, currentYear, userInfo.token])
 
   useEffect(() => {
     const getAttendanceByIdEmployee = async () => {
       try {
-        if (!selectedEmployee) return;
+        if (!selectedEmployee) return
         const response = await getAttendanceByEmployeeId(
           userInfo.token,
           selectedEmployee,
@@ -103,33 +110,30 @@ export default function AttendancePage() {
         setAttendanceByIdEmployee(response);
       } catch (error) {
         if (error instanceof Error) {
-          setError(error.message);
+          setError(error.message)
         }
       }
-    };
-    getAttendanceByIdEmployee();
-  }, [selectedEmployee, userInfo.token, currentMonth, currentYear]);
+    }
+    getAttendanceByIdEmployee()
+  }, [selectedEmployee, userInfo.token, currentMonth, currentYear])
 
   useEffect(() => {
     const attendanceById = async () => {
       try {
-        setLoadDetail(true);
-        if (!selectedAttendance) return;
-        const response = await getAttendanceById(
-          selectedAttendance,
-          userInfo.token
-        );
-        setEditingRecord(response);
+        setLoadDetail(true)
+        if (!selectedAttendance) return
+        const response = await getAttendanceById(selectedAttendance, userInfo.token)
+        setEditingRecord(response)
       } catch (error) {
         if (error instanceof Error) {
-          setError(error.message);
+          setError(error.message)
         }
       } finally {
-        setLoadDetail(false);
+        setLoadDetail(false)
       }
-    };
-    attendanceById();
-  }, [selectedAttendance, userInfo.token]);
+    }
+    attendanceById()
+  }, [selectedAttendance, userInfo.token])
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -141,144 +145,210 @@ export default function AttendancePage() {
         window.innerWidth < 768 &&
         sidebarOpen
       ) {
-        setSidebarOpen(false);
+        setSidebarOpen(false)
       }
     }
 
-    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside)
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [sidebarRef, sidebarOpen]);
+      document.removeEventListener("mousedown", handleClickOutside)
+    }
+  }, [sidebarRef, sidebarOpen])
 
   const filteredEmployees = employees.filter(
     (employee) =>
       employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      employee.department.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+      employee.department.toLowerCase().includes(searchTerm.toLowerCase()),
+  )
 
   // Get days in month
   const getDaysInMonth = (year: number, month: number) => {
-    return new Date(year, month + 1, 0).getDate();
-  };
+    return new Date(year, month + 1, 0).getDate()
+  }
 
   // Get day of week (0 = Sunday, 1 = Monday, etc.)
   const getDayOfWeek = (year: number, month: number, day: number) => {
-    return new Date(year, month, day).getDay();
-  };
+    return new Date(year, month, day).getDay()
+  }
 
   // Navigate to previous month
   const prevMonth = () => {
     if (currentMonth === 0) {
-      setCurrentMonth(11);
-      setCurrentYear(currentYear - 1);
+      setCurrentMonth(11)
+      setCurrentYear(currentYear - 1)
     } else {
-      setCurrentMonth(currentMonth - 1);
+      setCurrentMonth(currentMonth - 1)
     }
-  };
+  }
 
   // Navigate to next month
   const nextMonth = () => {
     if (currentMonth === 11) {
-      setCurrentMonth(0);
-      setCurrentYear(currentYear + 1);
+      setCurrentMonth(0)
+      setCurrentYear(currentYear + 1)
     } else {
-      setCurrentMonth(currentMonth + 1);
+      setCurrentMonth(currentMonth + 1)
     }
-  };
+  }
 
   // Get status color
   // Update the getStatusColor function to include 'sick'
   const getStatusColor = (status: AttendanceStatus): string => {
     switch (status) {
       case "present":
-        return "bg-green-100 border-green-500 text-green-700";
+        return "bg-green-100 border-green-500 text-green-700"
       case "absent":
-        return "bg-red-100 border-red-500 text-red-700";
+        return "bg-red-100 border-red-500 text-red-700"
       case "leave":
-        return "bg-blue-100 border-blue-500 text-blue-700";
+        return "bg-blue-100 border-blue-500 text-blue-700"
       case "late":
-        return "bg-yellow-100 border-yellow-500 text-yellow-700";
+        return "bg-yellow-100 border-yellow-500 text-yellow-700"
       case "sick":
-        return "bg-purple-100 border-purple-500 text-purple-700";
+        return "bg-purple-100 border-purple-500 text-purple-700"
       case "weekend":
-        return "bg-gray-100 border-gray-300 text-gray-500";
+        return "bg-gray-100 border-gray-300 text-gray-500"
       default:
-        return "bg-gray-100 border-gray-300 text-gray-500";
+        return "bg-gray-100 border-gray-300 text-gray-500"
     }
-  };
+  }
 
   // Get status label
   // Update the getStatusLabel function to include 'sick'
   const getStatusLabel = (status: AttendanceStatus): string => {
     switch (status) {
       case "present":
-        return "Present";
+        return "Present"
       case "absent":
-        return "Absent";
+        return "Absent"
       case "leave":
-        return "Leave";
+        return "Leave"
       case "late":
-        return "Late";
+        return "Late"
       case "sick":
-        return "Sick";
+        return "Sick"
       case "weekend":
-        return "Weekend";
+        return "Weekend"
       default:
-        return status;
+        return status
     }
-  };
+  }
 
   // Get attendance statistics for an employee
   // Update the getEmployeeStats function to include 'sick'
   const getEmployeeStats = (employeeId: string) => {
-    const employeeRecords = attendanceData.filter(
-      (record) => record.employeeId?._id === employeeId
-    );
+    const employeeRecords = attendanceData.filter((record) => record.employeeId?._id === employeeId)
 
-    const totalWorkDays = employeeRecords.filter(
-      (record) => record.status !== "weekend"
-    ).length;
+    const totalWorkDays = employeeRecords.filter((record) => record.status !== "weekend").length
 
     const stats = {
-      present: employeeRecords.filter((record) => record.status === "present")
-        .length,
-      absent: employeeRecords.filter((record) => record.status === "absent")
-        .length,
-      leave: employeeRecords.filter((record) => record.status === "leave")
-        .length,
+      present: employeeRecords.filter((record) => record.status === "present").length,
+      absent: employeeRecords.filter((record) => record.status === "absent").length,
+      leave: employeeRecords.filter((record) => record.status === "leave").length,
       late: employeeRecords.filter((record) => record.status === "late").length,
       sick: employeeRecords.filter((record) => record.status === "sick").length,
       totalWorkDays,
-    };
+    }
 
-    return stats;
-  };
+    return stats
+  }
 
   // Open attendance detail modal
-  const openAttendanceDetail = (attendanceId: string) => {
-    // setSelectedEmployee(employeeId);
-    setSelectedAttendance(attendanceId);
-    setAttendanceDetailOpen(true);
-  };
+  // const openAttendanceDetail = (attendanceId: string) => {
+  //   // setSelectedEmployee(employeeId);
+  //   setSelectedAttendance(attendanceId);
+  //   setAttendanceDetailOpen(true);
+  // };
+  
+  // Add this function to handle form changes
+  const handleEditChange = (e: React.ChangeEvent<HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target
+    setEditFormData({
+      ...editFormData,
+      [name]: value,
+    })
+  }
+
+  // Add this function to handle attendance update
+  const handleUpdateAttendance = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setUpdateLoading(true)
+    setUpdateError("")
+
+    try {
+      if (!selectedAttendance) {
+        throw new Error("No attendance record selected")
+      }
+
+      const updatedAttendance = await updateAttendance(
+        selectedAttendance,
+        {
+          status: editFormData.status,
+          note: editFormData.note,
+          employeeId: selectedEmployee || "",
+        },
+        userInfo.token,
+      )
+
+      // Update the attendance data
+      setAttendanceData(
+        attendanceData.map((record) => (record._id === selectedAttendance ? updatedAttendance : record)),
+      )
+
+      // Update the current editing record
+      setEditingRecord(updatedAttendance)
+
+      setUpdateSuccess(true)
+
+      // Exit edit mode after a short delay
+      setTimeout(() => {
+        setEditMode(false)
+        setUpdateSuccess(false)
+      }, 2000)
+    } catch (error) {
+      if (error instanceof Error) {
+        setUpdateError(error.message)
+      }
+    } finally {
+      setUpdateLoading(false)
+    }
+  }
+
+  // Update the openAttendanceDetail function to initialize the edit form data
+  const openAttendanceDetail = (employeeId: string, _id: string) => {
+    setSelectedEmployee(employeeId)
+    setSelectedAttendance(_id)
+    setAttendanceDetailOpen(true)
+    setEditMode(false) // Reset edit mode when opening the modal
+
+    // Reset update states
+    setUpdateSuccess(false)
+    setUpdateError("")
+  }
+
+  // Open attendance detail modal
+  // const openAttendanceDetail = (employeeId: string, _id: string) => {
+  //   setSelectedEmployee(employeeId)
+  //   setSelectedAttendance(_id)
+  //   setAttendanceDetailOpen(true)
+  // }
 
   // 3. Update the calendar view to only show check-in time
   const renderCalendarView = () => {
-    const daysInMonth = getDaysInMonth(currentYear, currentMonth);
-    const firstDayOfMonth = getDayOfWeek(currentYear, currentMonth, 1);
-    const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const daysInMonth = getDaysInMonth(currentYear, currentMonth)
+    const firstDayOfMonth = getDayOfWeek(currentYear, currentMonth, 1)
+    const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
     // Calculate days to display
-    const days = [];
+    const days = []
 
     // Add empty cells for days before the first day of the month
     for (let i = 0; i < firstDayOfMonth; i++) {
-      days.push(null);
+      days.push(null)
     }
 
     // Add days of the month
     for (let i = 1; i <= daysInMonth; i++) {
-      days.push(i);
+      days.push(i)
     }
 
     return (
@@ -319,77 +389,60 @@ export default function AttendancePage() {
                   className={`p-1 md:p-2 rounded-lg ${
                     isWeekend ? "bg-gray-50" : "bg-white"
                   } min-h-[60px] md:min-h-[80px] cursor-pointer hover:bg-gray-200 transition-colors border border-gray-200`}
-                  onClick={() => openAttendanceDetail(dayAttendance?._id ?? "")}
+                  onClick={() =>
+                    selectedEmployee ? openAttendanceDetail(selectedEmployee, dayAttendance?._id ?? "") : null
+                  }
                 >
-                  <div className="text-gray-800 font-medium mb-1 md:mb-2 text-xs md:text-sm">
-                    {day}
-                  </div>
+                  <div className="text-gray-800 font-medium mb-1 md:mb-2 text-xs md:text-sm">{day}</div>
 
                   {selectedEmployee ? (
                     isWeekend ? (
                       <div className="flex items-center">
                         <div
-                          className={`border-l-2 md:border-l-4 pl-2 ${getStatusColor(
-                            "weekend"
-                          )} rounded p-2 w-full`}
+                          className={`border-l-2 md:border-l-4 pl-2 ${getStatusColor("weekend")} rounded p-2 w-full`}
                         >
-                          <div className="text-xs font-medium text-gray-500 truncate">
-                            Weekend
-                          </div>
+                          <div className="text-xs font-medium text-gray-500 truncate">Weekend</div>
                         </div>
                       </div>
                     ) : dayAttendance ? (
                       <div className="flex items-center">
                         <div
                           className={`border-l-2 md:border-l-4 pl-2 ${getStatusColor(
-                            dayAttendance.status
+                            dayAttendance.status,
                           )} rounded p-2 w-full`}
                         >
-                          <div className="text-xs font-medium truncate">
-                            {getStatusLabel(dayAttendance.status)}
-                          </div>
+                          <div className="text-xs font-medium truncate">{getStatusLabel(dayAttendance.status)}</div>
                           {dayAttendance.date && (
                             <div className="text-xs mt-1 truncate">
                               In:{" "}
-                              {new Date(dayAttendance.date).toLocaleTimeString(
-                                [],
-                                {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                  hour12: false,
-                                }
-                              )}
+                              {new Date(dayAttendance.date).toLocaleTimeString([], {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                hour12: false,
+                              })}
                             </div>
                           )}
                         </div>
                       </div>
                     ) : (
                       <div className="flex items-center truncate">
-                        <div
-                          className={`border-l-2 md:border-l-4 pl-2 ${getStatusColor(
-                            "absent"
-                          )} rounded p-2 w-full`}
-                        >
-                          <div className="text-xs font-medium truncate">
-                            {getStatusLabel("absent")}
-                          </div>
+                        <div className={`border-l-2 md:border-l-4 pl-2 ${getStatusColor("absent")} rounded p-2 w-full`}>
+                          <div className="text-xs font-medium truncate">{getStatusLabel("absent")}</div>
                           <div className="text-xs mt-1">In: -</div>
                         </div>
                       </div>
                     )
                   ) : (
-                    <div className="text-xs text-gray-500 hidden md:block">
-                      Select an employee
-                    </div>
+                    <div className="text-xs text-gray-500 hidden md:block">Select an employee</div>
                   )}
                 </div>
-              );
+              )
             })}
           </div>
         </div>
       </div>
-    );
-  };
+    )
+  }
 
   // Render stats view
   // Update the renderStatsView function to include 'sick'
@@ -399,11 +452,11 @@ export default function AttendancePage() {
         <div className="bg-white rounded-xl border border-gray-200 shadow-md p-4 md:p-8 text-center text-gray-700">
           Please select an employee to view attendance statistics
         </div>
-      );
+      )
     }
 
-    const stats = getEmployeeStats(selectedEmployee);
-    const employee = employees.find((emp) => emp._id === selectedEmployee);
+    const stats = getEmployeeStats(selectedEmployee)
+    const employee = employees.find((emp) => emp._id === selectedEmployee)
 
     return (
       <div className="bg-white rounded-xl border border-gray-200 shadow-md p-4 md:p-6">
@@ -413,9 +466,7 @@ export default function AttendancePage() {
             className="w-12 h-12 md:w-16 md:h-16 text-xl md:text-2xl font-bold mr-3 md:mr-4"
           />
           <div>
-            <h3 className="text-lg md:text-xl font-bold text-gray-800">
-              {employee?.name}
-            </h3>
+            <h3 className="text-lg md:text-xl font-bold text-gray-800">{employee?.name}</h3>
             <p className="text-sm md:text-base text-gray-600">
               {employee?.position} • {employee?.department}
             </p>
@@ -425,9 +476,7 @@ export default function AttendancePage() {
         <div className="grid grid-cols-2 md:grid-cols-5 gap-2 md:gap-4">
           <div className="bg-gray-50 rounded-lg p-3 md:p-4">
             <div className="text-xs md:text-sm text-gray-600">Present</div>
-            <div className="text-lg md:text-2xl font-bold text-gray-800">
-              {stats.present}
-            </div>
+            <div className="text-lg md:text-2xl font-bold text-gray-800">{stats.present}</div>
             <div className="text-xs md:text-sm text-gray-600">
               {stats.present && stats.totalWorkDays
                 ? `${Math.round((stats.present / stats.totalWorkDays) * 100)}%`
@@ -437,9 +486,7 @@ export default function AttendancePage() {
 
           <div className="bg-gray-50 rounded-lg p-3 md:p-4">
             <div className="text-xs md:text-sm text-gray-600">Absent</div>
-            <div className="text-lg md:text-2xl font-bold text-gray-800">
-              {stats.absent}
-            </div>
+            <div className="text-lg md:text-2xl font-bold text-gray-800">{stats.absent}</div>
             <div className="text-xs md:text-sm text-gray-600">
               {stats.absent && stats.totalWorkDays
                 ? `${Math.round((stats.absent / stats.totalWorkDays) * 100)}%`
@@ -449,21 +496,15 @@ export default function AttendancePage() {
 
           <div className="bg-gray-50 rounded-lg p-3 md:p-4">
             <div className="text-xs md:text-sm text-gray-600">Late</div>
-            <div className="text-lg md:text-2xl font-bold text-gray-800">
-              {stats.late}
-            </div>
+            <div className="text-lg md:text-2xl font-bold text-gray-800">{stats.late}</div>
             <div className="text-xs md:text-sm text-gray-600">
-              {stats.late && stats.totalWorkDays
-                ? `${Math.round((stats.late / stats.totalWorkDays) * 100)}%`
-                : "0%"}
+              {stats.late && stats.totalWorkDays ? `${Math.round((stats.late / stats.totalWorkDays) * 100)}%` : "0%"}
             </div>
           </div>
 
           <div className="bg-gray-50 rounded-lg p-3 md:p-4">
             <div className="text-xs md:text-sm text-gray-600">Leave</div>
-            <div className="text-lg md:text-2xl font-bold text-gray-800">
-              {stats.leave}
-            </div>
+            <div className="text-lg md:text-2xl font-bold text-gray-800">{stats.leave}</div>
             <div className="text-xs md:text-sm text-gray-600">
               {stats.leave && stats.totalWorkDays
                 ? `${Math.round((stats.present / stats.totalWorkDays) * 100)}%`
@@ -473,51 +514,43 @@ export default function AttendancePage() {
 
           <div className="bg-gray-50 rounded-lg p-3 md:p-4">
             <div className="text-xs md:text-sm text-gray-600">Sick</div>
-            <div className="text-lg md:text-2xl font-bold text-gray-800">
-              {stats.sick}
-            </div>
+            <div className="text-lg md:text-2xl font-bold text-gray-800">{stats.sick}</div>
             <div className="text-xs md:text-sm text-gray-600">
-              {stats.sick && stats.totalWorkDays
-                ? `${Math.round((stats.sick / stats.totalWorkDays) * 100)}%`
-                : "0%"}
+              {stats.sick && stats.totalWorkDays ? `${Math.round((stats.sick / stats.totalWorkDays) * 100)}%` : "0%"}
             </div>
           </div>
         </div>
       </div>
-    );
-  };
+    )
+  }
 
   const getMonthlyAbsences = (month: number, year: number) => {
     const absences: {
-      attendanceId: string;
-      employee: UserBase | undefined;
-      date: string;
-      status: AttendanceStatus;
-      daysAgo: number;
-      note?: string;
-    }[] = [];
+      attendanceId: string
+      employee: UserBase | undefined
+      date: string
+      status: AttendanceStatus
+      daysAgo: number
+      note?: string
+    }[] = []
 
     employees.forEach((employee) => {
       const employeeAbsences = attendanceData
         .filter((record) => {
-          const recordDate = parseISO(record.date);
+          const recordDate = parseISO(record.date)
           return (
             record.employeeId?._id === employee._id &&
-            ["absent", "leave", "sick", "late", "present"].includes(
-              record.status
-            ) &&
+            ["absent", "leave", "sick", "late", "present"].includes(record.status) &&
             recordDate.getMonth() === month &&
             recordDate.getFullYear() === year
-          );
+          )
         })
-        .sort(
-          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-        );
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 
       employeeAbsences.forEach((absence) => {
-        const today = new Date();
-        const absenceDate = parseISO(absence.date);
-        const daysAgo = differenceInDays(today, absenceDate);
+        const today = new Date()
+        const absenceDate = parseISO(absence.date)
+        const daysAgo = differenceInDays(today, absenceDate)
 
         absences.push({
           attendanceId: absence._id,
@@ -526,16 +559,14 @@ export default function AttendancePage() {
           status: absence.status,
           daysAgo,
           note: absence.note,
-        });
-      });
-    });
+        })
+      })
+    })
 
-    return absences.sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-    );
-  };
+    return absences.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+  }
 
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1)
   // Render absences view
   // Update the renderAbsencesView function to handle 'sick' status
   const renderAbsencesView = () => {
@@ -595,92 +626,98 @@ export default function AttendancePage() {
                   colorClasses = "border-green-500 bg-green-50";
                 }
 
-                return (
-                  <div
-                    key={index}
-                    className={`p-3 md:p-4 rounded-lg border-l-4 ${colorClasses} hover:bg-gray-200 transition-all cursor-pointer shadow-sm`}
-                    onClick={() =>
-                      openAttendanceDetail(absence?.attendanceId ?? "")
-                    }
-                  >
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                      <div className="flex items-center mb-2 sm:mb-0">
-                        <Avatar
-                          name={absence.employee?.name}
-                          className="w-10 h-10 mr-3"
-                        />
-                        <div>
-                          <div className="font-medium text-gray-800 text-sm md:text-base">
-                            {absence.employee?.name}
-                          </div>
-                          <div className="text-gray-600 text-xs md:text-sm">
-                            {absence.employee?.department}
-                          </div>
-                        </div>
-                      </div>
 
-                      {/* Responsive date and time info */}
-                      <div className="flex items-center justify-between mt-2 sm:mt-0 sm:block sm:text-right">
-                        <div className="text-gray-600 text-xs md:text-sm flex items-center">
-                          <CalendarDays className="h-3 w-3 mr-1" />
-                          {format(parseISO(absence.date), "MMM d, yyyy")}
+              return (
+                <div
+                  key={index}
+                  className={`p-3 md:p-4 rounded-lg border-l-4 ${colorClasses} hover:bg-opacity-80 transition-all cursor-pointer shadow-sm`}
+                  onClick={() =>
+                    selectedEmployee
+                      ? openAttendanceDetail(
+                          selectedEmployee,
+                          absence?.attendanceId ?? ""
+                        )
+                      : null
+                  }
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-center mb-2 sm:mb-0">
+                      <Avatar
+                        name={absence.employee?.name}
+                        className="w-10 h-10 mr-3"
+                      />
+                      <div>
+                        <div className="font-medium text-gray-800 text-sm md:text-base">
+                          {absence.employee?.name}
                         </div>
-                        <div className="text-gray-600 text-xs md:text-sm flex items-center">
-                          <Clock className="h-3 w-3 mr-1" />
-                          {absence.daysAgo === 0
-                            ? "Today"
-                            : absence.daysAgo === 1
-                            ? "Yesterday"
-                            : `${absence.daysAgo} days ago`}
+                        <div className="text-gray-600 text-xs md:text-sm">
+                          {absence.employee?.department}
                         </div>
                       </div>
                     </div>
 
-                    <div className="mt-3 flex flex-wrap items-center gap-2">
-                      <div
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          absence.status === "absent"
-                            ? "bg-red-100 text-red-700"
-                            : absence.status === "sick"
-                            ? "bg-purple-100 text-purple-700"
-                            : absence.status === "leave"
-                            ? "bg-blue-100 text-blue-700"
-                            : absence.status === "late"
-                            ? "bg-yellow-100 text-yellow-700"
-                            : "bg-green-100 text-green-700"
-                        }`}
-                      >
-                        {getStatusLabel(absence.status)}
+                    {/* Responsive date and time info */}
+                    <div className="flex items-center justify-between mt-2 sm:mt-0 sm:block sm:text-right">
+                      <div className="text-gray-600 text-xs md:text-sm flex items-center">
+                        <CalendarDays className="h-3 w-3 mr-1" />
+                        {format(parseISO(absence.date), "MMM d, yyyy")}
                       </div>
-                      {absence.note && (
-                        <div className="text-gray-600 text-xs md:text-sm italic line-clamp-1 sm:line-clamp-none">
-                          {absence.note}
-                        </div>
-                      )}
+                      <div className="text-gray-600 text-xs md:text-sm flex items-center">
+                        <Clock className="h-3 w-3 mr-1" />
+                        {absence.daysAgo === 0
+                          ? "Today"
+                          : absence.daysAgo === 1
+                          ? "Yesterday"
+                          : `${absence.daysAgo} days ago`}
+                      </div>
                     </div>
                   </div>
-                );
-              })
-            )}
-          </div>
-        )}
 
-        {/* Improved pagination controls for mobile */}
-        {paginatedAbsences.length > 0 && (
-          <div className="flex justify-end items-center mt-4 md:mt-6 ml-auto">
-            <div className="flex items-center gap-2 sm:gap-4">
-              <button
-                onClick={prevPage}
-                disabled={currentPage === 1}
-                className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg border text-xs sm:text-sm font-medium transition-all ${
-                  currentPage === 1
-                    ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
-                    : "bg-white hover:bg-gray-100 text-gray-700 border-gray-300"
-                }`}
-              >
-                <ChevronLeft className="h-4 w-4 sm:hidden" />
-                <span className="hidden sm:inline">Previous</span>
-              </button>
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <div
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        absence.status === "absent"
+                          ? "bg-red-100 text-red-700"
+                          : absence.status === "sick"
+                          ? "bg-purple-100 text-purple-700"
+                          : absence.status === "leave"
+                          ? "bg-blue-100 text-blue-700"
+                          : absence.status === "late"
+                          ? "bg-yellow-100 text-yellow-700"
+                          : "bg-green-100 text-green-700"
+                      }`}
+                    >
+                      {getStatusLabel(absence.status)}
+                    </div>
+                    {absence.note && (
+                      <div className="text-gray-600 text-xs md:text-sm italic line-clamp-1 sm:line-clamp-none">
+                        {absence.note}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      )}
+
+      {/* Improved pagination controls for mobile */}
+      {paginatedAbsences.length > 0 && (
+        <div className="flex justify-end items-center mt-4 md:mt-6 ml-auto">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <button
+              onClick={prevPage}
+              disabled={currentPage === 1}
+              className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg border text-xs sm:text-sm font-medium transition-all ${
+                currentPage === 1
+                  ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+                  : "bg-white hover:bg-gray-100 text-gray-700 border-gray-300"
+              }`}
+            >
+              <ChevronLeft className="h-4 w-4 sm:hidden" />
+              <span className="hidden sm:inline">Previous</span>
+            </button>
 
               <div className="text-xs sm:text-sm text-gray-600">
                 Page <span className="font-medium">{currentPage}</span> of{" "}
@@ -708,20 +745,20 @@ export default function AttendancePage() {
 
   // Add a new function to handle year selection
   const handleYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setCurrentYear(Number.parseInt(e.target.value));
-  };
+    setCurrentYear(Number.parseInt(e.target.value))
+  }
 
   // Add a new function to handle month selection
   const handleMonthChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setCurrentMonth(Number.parseInt(e.target.value));
-  };
+    setCurrentMonth(Number.parseInt(e.target.value))
+  }
 
   // Toggle sidebar for mobile
   const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
-  };
+    setSidebarOpen(!sidebarOpen)
+  }
 
-  const searchContext = useContext(SearchContext);
+  const searchContext = useContext(SearchContext)
 
   // Update the sidebar layout to make the employee list scrollable but the attendance status fixed
   return (
@@ -735,9 +772,7 @@ export default function AttendancePage() {
           >
             <Users className="h-5 w-5 text-gray-700" />
           </button>
-          <h1 className="text-lg font-semibold text-gray-800 ml-2">
-            Employee Attendance
-          </h1>
+          <h1 className="text-lg font-semibold text-gray-800 ml-2">Employee Attendance</h1>
         </div>
       </div>
 
@@ -752,13 +787,8 @@ export default function AttendancePage() {
           {/* Sidebar Header */}
           <div className="p-4 border-b border-gray-200">
             <div className="flex items-center justify-between">
-              <h1 className="text-xl font-semibold text-gray-800">
-                Employee Attendance
-              </h1>
-              <button
-                onClick={toggleSidebar}
-                className="p-1 rounded-md hover:bg-gray-200 transition-colors md:hidden"
-              >
+              <h1 className="text-xl font-semibold text-gray-800">Employee Attendance</h1>
+              <button onClick={toggleSidebar} className="p-1 rounded-md hover:bg-gray-200 transition-colors md:hidden">
                 <X className="h-5 w-5 text-gray-700" />
               </button>
             </div>
@@ -766,9 +796,7 @@ export default function AttendancePage() {
 
           {/* Attendance Legend */}
           <div className="p-4 border-b border-gray-200">
-            <h3 className="text-gray-800 font-medium mb-3">
-              Attendance Status
-            </h3>
+            <h3 className="text-gray-800 font-medium mb-3">Attendance Status</h3>
             <div className="grid grid-cols-2 gap-2">
               {/* Status */}
               {[
@@ -796,10 +824,7 @@ export default function AttendancePage() {
                 value={searchContext?.searchTerm}
                 onChange={(e) => searchContext?.setSearchTerm(e.target.value)}
               />
-              <Search
-                className="absolute left-2.5 top-2.5 text-gray-400"
-                size={16}
-              />
+              <Search className="absolute left-2.5 top-2.5 text-gray-400" size={16} />
             </div>
           </div>
 
@@ -817,21 +842,17 @@ export default function AttendancePage() {
                       selectedEmployee === employee._id ? "bg-gray-200" : ""
                     }`}
                     onClick={() => {
-                      setSelectedEmployee(employee._id);
-                      setCurrentView("calendar");
+                      setSelectedEmployee(employee._id)
+                      setCurrentView("calendar")
                       if (window.innerWidth < 768) {
-                        setSidebarOpen(false);
+                        setSidebarOpen(false)
                       }
                     }}
                   >
                     <Avatar name={employee.name} />
                     <div>
-                      <div className="text-gray-800 text-sm font-medium">
-                        {employee.name}
-                      </div>
-                      <div className="text-gray-500 text-xs">
-                        {employee.department}
-                      </div>
+                      <div className="text-gray-800 text-sm font-medium">{employee.name}</div>
+                      <div className="text-gray-500 text-xs">{employee.department}</div>
                     </div>
                   </div>
                 ))}
@@ -845,16 +866,10 @@ export default function AttendancePage() {
           <div className="flex flex-col lg:flex-row lg:items-center justify-between p-3 lg:p-4 border-b border-gray-200">
             <div className="flex items-center gap-2 lg:gap-4 mb-3 lg:mb-0">
               <div className="flex">
-                <button
-                  className="p-1 lg:p-2 text-gray-700 hover:bg-gray-100 rounded-l-lg"
-                  onClick={prevMonth}
-                >
+                <button className="p-1 lg:p-2 text-gray-700 hover:bg-gray-100 rounded-l-lg" onClick={prevMonth}>
                   <ChevronLeft className="h-4 w-4 lg:h-5 lg:w-5" />
                 </button>
-                <button
-                  className="p-1 lg:p-2 text-gray-700 hover:bg-gray-100 rounded-r-lg"
-                  onClick={nextMonth}
-                >
+                <button className="p-1 lg:p-2 text-gray-700 hover:bg-gray-100 rounded-r-lg" onClick={nextMonth}>
                   <ChevronRight className="h-4 w-4 lg:h-5 lg:w-5" />
                 </button>
               </div>
@@ -893,9 +908,7 @@ export default function AttendancePage() {
               <div className="flex bg-gray-100 rounded-lg p-1 overflow-x-auto lg:w-auto">
                 <button
                   className={`flex items-center px-2 lg:px-3 py-1 lg:py-1.5 rounded whitespace-nowrap ${
-                    currentView === "calendar"
-                      ? "bg-white shadow-sm"
-                      : "hover:bg-gray-200"
+                    currentView === "calendar" ? "bg-white shadow-sm" : "hover:bg-gray-200"
                   } text-gray-800 text-xs lg:text-sm transition-colors`}
                   onClick={() => setCurrentView("calendar")}
                 >
@@ -904,9 +917,7 @@ export default function AttendancePage() {
                 </button>
                 <button
                   className={`flex items-center px-2 lg:px-3 py-1 lg:py-1.5 rounded whitespace-nowrap ${
-                    currentView === "stats"
-                      ? "bg-white shadow-sm"
-                      : "hover:bg-gray-200"
+                    currentView === "stats" ? "bg-white shadow-sm" : "hover:bg-gray-200"
                   } text-gray-800 text-xs lg:text-sm transition-colors`}
                   onClick={() => setCurrentView("stats")}
                 >
@@ -915,9 +926,7 @@ export default function AttendancePage() {
                 </button>
                 <button
                   className={`flex items-center px-2 lg:px-3 py-1 lg:py-1.5 rounded whitespace-nowrap ${
-                    currentView === "absences"
-                      ? "bg-white shadow-sm"
-                      : "hover:bg-gray-200"
+                    currentView === "absences" ? "bg-white shadow-sm" : "hover:bg-gray-200"
                   } text-gray-800 text-xs lg:text-sm transition-colors`}
                   onClick={() => setCurrentView("absences")}
                 >
@@ -944,90 +953,174 @@ export default function AttendancePage() {
 
         {/* Mobile sidebar backdrop */}
         {sidebarOpen && (
-          <div
-            className="fixed inset-0 bg-black/50 z-20 md:hidden"
-            onClick={() => setSidebarOpen(false)}
-          ></div>
+          <div className="fixed inset-0 bg-black/50 z-20 md:hidden" onClick={() => setSidebarOpen(false)}></div>
         )}
 
-        {/* 5. Update the attendance detail modal to only show check-in time */}
-        {attendanceDetailOpen && selectedAttendance && editingRecord && (
+        {attendanceDetailOpen && selectedEmployee && selectedAttendance && editingRecord && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="bg-white p-4 md:p-6 rounded-lg shadow-xl max-w-md w-full mx-auto border border-gray-200">
               {loadDetail ? (
                 <Loading />
               ) : (
                 (() => {
-                  // const employee = employees.find(
-                  //   (emp) => emp._id === selectedEmployee
-                  // );
-                  const record = editingRecord;
-                  const formattedDate = format(
-                    parseISO(record.date),
-                    "EEEE, d MMMM yyyy"
-                  );
+                  const employee = employees.find((emp) => emp._id === selectedEmployee)
+                  const record = editingRecord
+                  const formattedDate = format(parseISO(record.date), "EEEE, d MMMM yyyy")
 
                   return (
                     <>
-                      <div className="flex items-center mb-4">
-                        <Avatar
-                          name={record.employeeId?.name}
-                          className="mr-3"
-                        />
-                        <div>
-                          <h3 className="text-lg md:text-xl font-bold text-gray-800">
-                            {record.employeeId?.name}
-                          </h3>
-                          <p className="text-xs md:text-sm text-gray-600">
-                            {formattedDate}
-                          </p>
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center">
+                          <Avatar name={employee?.name} className="mr-3" />
+                          <div>
+                            <h3 className="text-lg md:text-xl font-bold text-gray-800">{employee?.name}</h3>
+                            <p className="text-xs md:text-sm text-gray-600">{formattedDate}</p>
+                          </div>
                         </div>
+                        
                       </div>
 
-                      <div
-                        className={`p-3 md:p-4 rounded-lg border-l-4 mb-4 ${getStatusColor(
-                          record.status
-                        )}`}
-                      >
-                        <div className="text-base md:text-lg font-bold">
-                          {getStatusLabel(record.status)}
-                        </div>
-                        {record.note && (
-                          <div className="mt-2 italic text-sm">
-                            {record.note}
-                          </div>
-                        )}
-                      </div>
-
-                      {record.date && (
-                        <div className="bg-gray-50 p-3 rounded-lg mb-4 md:mb-6">
-                          <div className="text-xs md:text-sm text-gray-600">
-                            Entry Time
-                          </div>
-                          <div className="text-lg md:text-xl font-bold text-gray-800">
-                            {new Date(record.date).toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                              hour12: false,
-                            })}
-                          </div>
+                      {updateSuccess && (
+                        <div className="mb-4 p-3 bg-green-50 border border-green-200 text-green-700 rounded-lg">
+                          Attendance record updated successfully!
                         </div>
                       )}
 
-                      <div className="flex justify-between">
-                        <button
-                          className="px-3 md:px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors text-sm md:text-base"
-                          onClick={() => setAttendanceDetailOpen(false)}
-                        >
-                          Close
-                        </button>
+                      {updateError && (
+                        <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg">
+                          {updateError}
+                        </div>
+                      )}
 
-                        {/* <button className="px-3 md:px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm md:text-base">
-                          Edit Attendance
-                        </button> */}
-                      </div>
+                      {editMode ? (
+                        // Edit Mode
+                        <form onSubmit={handleUpdateAttendance}>
+                          <div className="mb-4">
+                            <label className="block text-gray-700 text-sm font-medium mb-2" htmlFor="status">
+                              Attendance Status
+                            </label>
+                            <select
+                              id="status"
+                              name="status"
+                              value={editFormData.status}
+                              onChange={handleEditChange}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              required
+                            >
+                              <option value="present">Present</option>
+                              <option value="late">Late</option>
+                              <option value="absent">Absent</option>
+                              <option value="sick">Sick</option>
+                              <option value="leave">Leave</option>
+                            </select>
+                          </div>
+
+                          <div className="mb-4">
+                            <label className="block text-gray-700 text-sm font-medium mb-2" htmlFor="note">
+                              Note
+                            </label>
+                            <textarea
+                              id="note"
+                              name="note"
+                              value={editFormData.note}
+                              onChange={handleEditChange}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[100px]"
+                              placeholder="Add a note about this attendance record..."
+                            ></textarea>
+                          </div>
+
+                          <div className="flex justify-between">
+                            <button
+                              type="button"
+                              className="px-3 md:px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors text-sm md:text-base"
+                              onClick={() => setEditMode(false)}
+                            >
+                              Cancel
+                            </button>
+
+                            <button
+                              type="submit"
+                              className="px-3 md:px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm md:text-base flex items-center"
+                              disabled={updateLoading}
+                            >
+                              {updateLoading ? (
+                                <>
+                                  <svg
+                                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <circle
+                                      className="opacity-25"
+                                      cx="12"
+                                      cy="12"
+                                      r="10"
+                                      stroke="currentColor"
+                                      strokeWidth="4"
+                                    ></circle>
+                                    <path
+                                      className="opacity-75"
+                                      fill="currentColor"
+                                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                    ></path>
+                                  </svg>
+                                  Updating...
+                                </>
+                              ) : (
+                                "Save Changes"
+                              )}
+                            </button>
+                          </div>
+                        </form>
+                      ) : (
+                        // View Mode
+                        <>
+                          <div className={`p-3 md:p-4 rounded-lg border-l-4 mb-4 ${getStatusColor(record.status)}`}>
+                            <div className="text-base md:text-lg font-bold">{getStatusLabel(record.status)}</div>
+                            {record.note && <div className="mt-2 italic text-sm">{record.note}</div>}
+                          </div>
+
+                          {record.date && (
+                            <div className="bg-gray-50 p-3 rounded-lg mb-4 md:mb-6">
+                              <div className="text-xs md:text-sm text-gray-600">Entry Time</div>
+                              <div className="text-lg md:text-xl font-bold text-gray-800">
+                                {new Date(record.date).toLocaleTimeString([], {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                  hour12: false,
+                                })}
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="flex justify-between">
+                            <button
+                              className="px-3 md:px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors text-sm md:text-base"
+                              onClick={() => setAttendanceDetailOpen(false)}
+                            >
+                              Close
+                            </button>
+
+                            {userInfo.role === "admin" && (
+                              <button
+                                className="px-3 md:px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm md:text-base"
+                                onClick={() => {
+                                  setEditMode(true)
+                                  setEditFormData({
+                                    status: record.status,
+                                    note: record.note || "",
+                                  })
+                                }}
+                              >
+                                Edit Attendance
+                              </button>
+                            )}
+                          </div>
+                        </>
+                      )}
                     </>
-                  );
+                  )
                 })()
               )}
             </div>
@@ -1035,5 +1128,5 @@ export default function AttendancePage() {
         )}
       </main>
     </div>
-  );
+  )
 }
