@@ -7,11 +7,14 @@ const {
   updateSubmissionStatus,
   getSubmissionById,
   getSubmissionStats,
+  getSubmissionTrend,
 } = require("../controllers/submissionController")
 const { protect, admin } = require("../middleware/authMiddleware")
 
 // Create a new submission and get employee's submissions
 router.route("/").post(protect, createSubmission).get(protect, admin, getAllSubmissions)
+
+router.route("/trend").get(protect, admin, getSubmissionTrend);
 
 // Get current employee's submissions
 router.get("/employee", protect, getEmployeeSubmissions)

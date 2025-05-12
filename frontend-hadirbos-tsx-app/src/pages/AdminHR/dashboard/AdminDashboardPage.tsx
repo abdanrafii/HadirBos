@@ -40,10 +40,7 @@ const AdminDashboardPage = () => {
       try {
         setLoading(true);
         const data = await getUsers(userInfo.token);
-        const employeeUsers = data.filter(
-          (user: User) => user.role === "employee"
-        );
-        setUsers(employeeUsers);
+        setUsers(data);
       } catch (error) {
         if (error instanceof Error) {
           setError(error.message);

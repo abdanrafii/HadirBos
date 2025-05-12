@@ -6,10 +6,16 @@ const {
   updatePayroll,
   getPayrollsByEmployeeId,
   processPayment,
+  getPayrollStats,
+  getPayrollTrend,
 } = require("../controllers/payrollController");
 const { protect, admin } = require("../middleware/authMiddleware");
 
 router.route("/").get(protect, admin, getAllPayroll);
+
+router.route("/stats").get(protect, admin, getPayrollStats);
+
+router.route("/trend").get(protect, admin, getPayrollTrend);
 
 router
   .route("/:id")
@@ -19,5 +25,6 @@ router
 router.route("/employee/:employeeId").get(protect, getPayrollsByEmployeeId);
 
 router.route("/:id/payment").patch(protect, admin, processPayment);
+
 
 module.exports = router;

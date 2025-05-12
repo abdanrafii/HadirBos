@@ -19,3 +19,37 @@ export type Payroll = {
   paymentReference: string;
   notes: string;
 };
+
+export type PayrollStats = {
+  payrollTotals: {
+    baseSalary: number;
+    deductions: number;
+    bonus: number;
+    tax: number;
+    totalAmount: number;
+  };
+  avgBaseSalary: number;
+  avgBonus: number;
+  avgTax: number;
+  avgDeductions: number;
+  avgTotalAmount: number;
+  employeesWithBonus: number;
+  employeesWithDeductions: number;
+  highestSalary: number;
+  lowestSalary: number;
+  bonusToSalaryRatio: number;
+  totalEmployees: number;
+};
+
+export type PayrollTrend = {
+  trend: {
+    year: number;
+    month: number;
+    totalBaseSalary: number;
+    totalBonus: number;
+    totalDeductions: number;
+    totalTax: number;
+    totalPayroll: number;
+    count: number;
+  }[];
+}

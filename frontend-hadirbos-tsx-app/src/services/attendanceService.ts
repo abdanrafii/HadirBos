@@ -85,7 +85,7 @@ export const updateAttendance = async (
 };
 
 export const getAttendanceById = async (
-  attendanceId: string ,
+  attendanceId: string,
   token: string
 ) => {
   const config = {
@@ -129,14 +129,23 @@ export const getAllAttendance = async (token: string) => {
   }
 };
 
-export const getAttendanceStats = async (token: string, employeeId: string) => {
+export const getAttendanceStats = async (
+  token: string,
+  employeeId: string,
+  month?: number,
+  year?: number,
+  period?: string
+) => {
   const config = {
     headers: {
       Authorization: `Bearer ${token}`,
     },
   };
   try {
-    const response = await axios.get(`${BASE_URL}/attendance/stats/employee/${employeeId}`, config);
+    const response = await axios.get(
+      `${BASE_URL}/attendance/stats/employee/${employeeId}?month=${month}&year=${year}&period=${period}`,
+      config
+    );
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -171,6 +180,139 @@ export const getAttendanceByEmployeeId = async (
       throw new Error(
         error.response?.data?.message ||
           "Failed to fetch attendance by employee ID"
+      );
+    }
+    throw new Error("An unexpected error occurred");
+  }
+};
+
+export const getAllAttendanceStats = async (
+  token: string,
+  month?: number,
+  year?: number,
+  period?: string
+) => {
+  const config = {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  };
+
+  const params = new URLSearchParams();
+  if (month !== undefined) params.append("month", month.toString());
+  if (year !== undefined) params.append("year", year.toString());
+  if (period) params.append("period", period); 
+
+  try {
+    const response = await axios.get(
+      `${BASE_URL}/attendance/stats/all?${params.toString()}`,
+      config
+    );
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      throw new Error(
+        error.response?.data?.message || "Failed to fetch all attendance stats"
+      );
+    }
+    throw new Error("An unexpected error occurred");
+  }
+};
+
+export const getDepartmentStatistics = async (
+  token: string,
+  month?: number,
+  year?: number,
+  period?: string
+) => {
+  const config = {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  };
+
+  const params = new URLSearchParams();
+  if (month !== undefined) params.append("month", month.toString());
+  if (year !== undefined) params.append("year", year.toString());
+  if (period) params.append("period", period);
+
+  try {
+    const response = await axios.get(
+      `${BASE_URL}/attendance/stats/department?${params.toString()}`,
+      config
+    );
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      throw new Error(
+        error.response?.data?.message || "Failed to fetch department statistics"
+      );
+    }
+    throw new Error("An unexpected error occurred");
+  }
+};
+
+export const getEmployeePerformanceStats = async (
+  token: string,
+  month?: number,
+  year?: number,
+  period?: string
+) => {
+  const config = {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  };
+
+  const params = new URLSearchParams();
+  if (month !== undefined) params.append("month", month.toString());
+  if (year !== undefined) params.append("year", year.toString());
+  if (period) params.append("period", period);
+
+  try {
+    const response = await axios.get(
+      `${BASE_URL}/attendance/stats/employee-performance?${params.toString()}`,
+      config
+    );
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      throw new Error(
+        error.response?.data?.message ||
+          "Failed to fetch employee performance statistics"
+      );
+    }
+    throw new Error("An unexpected error occurred");
+  }
+};
+
+export const getAttendanceTrend = async (
+  token: string,
+  month?: number,
+  year?: number,
+  period?: string
+) => {
+  const config = {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  };
+
+  const params = new URLSearchParams();
+  if (month !== undefined) params.append("month", month.toString());
+  if (year !== undefined) params.append("year", year.toString());
+  if (period) params.append("period", period);
+
+  try {
+    const response = await axios.get(
+      `${BASE_URL}/attendance/trend?${params.toString()}`,
+      config
+    );
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      throw new Error(
+        error.response?.data?.message || "Failed to fetch attendance trend"
       );
     }
     throw new Error("An unexpected error occurred");

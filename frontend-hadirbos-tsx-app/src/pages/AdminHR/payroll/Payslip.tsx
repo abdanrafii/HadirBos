@@ -33,7 +33,9 @@ export default function PaySlip({
         setLoading(true);
         const data = await getAttendanceStats(
           userInfo.token,
-          payrollRecord.employeeId._id
+          payrollRecord.employeeId._id,
+          payrollRecord.month - 1,
+          payrollRecord.year
         );
         setAttendanceStats(data);
       } catch (error) {
@@ -46,7 +48,7 @@ export default function PaySlip({
     };
 
     fetchAttendance();
-  }, [userInfo.token, payrollRecord.employeeId._id]);
+  }, [userInfo.token, payrollRecord.employeeId._id, payrollRecord.month, payrollRecord.year]);
 
   // Format currency
   const idrFormatter = (value: number) => {
@@ -125,15 +127,15 @@ export default function PaySlip({
         ) : (
           <>
             {/* Header */}
-            <div className="p-4 md:p-6 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+            <div className="p-4 md:p-6 bg-gradient-to-r from-indigo-500 to-purple-600 text-white flex items-center justify-between">
               <div className="flex items-center">
                 <button
                   onClick={onClose}
-                  className="mr-4 p-1 rounded-full hover:bg-gray-200 transition-colors"
+                  className="mr-4 p-1 rounded-full hover:bg-white/10 transition-colors"
                 >
-                  <ArrowLeft className="h-5 w-5 text-gray-600" />
+                  <ArrowLeft className="h-5 w-5 text-white" />
                 </button>
-                <h2 className="text-lg font-bold text-gray-800">
+                <h2 className="text-lg font-bold text-white">
                   Employee Payslip
                 </h2>
               </div>
@@ -142,7 +144,7 @@ export default function PaySlip({
                 <button
                   onClick={generatePDF}
                   disabled={isGenerating}
-                  className="flex items-center gap-1 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center gap-1 px-3 py-2 bg-white text-indigo-700 rounded-md hover:bg-indigo-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Download className="h-4 w-4" />
                   <span>{isGenerating ? "Generating..." : "Download PDF"}</span>
@@ -187,7 +189,7 @@ export default function PaySlip({
                   <div className="mb-4 md:mb-0">
                     <div className="bg-gray-100 h-12 w-36 flex items-center justify-center text-gray-400 font-bold rounded">
                       <img src="/p.png" alt="Logo" className="h-8 w-8 mr-2" />
-                      <span className="text-xl">Hadirbos</span>
+                      <span className="text-xl text-blue-600">Hadirbos</span>
                     </div>
                   </div>
                   <div className="text-right">

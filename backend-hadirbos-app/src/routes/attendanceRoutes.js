@@ -1,31 +1,45 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const { 
+const {
   getAllAttendances,
-  createAttendance, 
-  getAttendances, 
-  getAttendanceById, 
+  createAttendance,
+  getAttendances,
+  getAttendanceById,
   updateAttendance,
-  getAttendanceStats, 
-  getAttendancesByUser
-} = require('../controllers/attendanceController');
-const { protect, admin } = require('../middleware/authMiddleware');
-const checkWorkingDay = require('../middleware/checkWorkingDayMiddleware');
+  getAttendanceStats,
+  getAttendancesByUser,
+  getAllAttendanceStats,
+  getDepartmentStatistics,
+  getEmployeePerformanceStats,
+  getAttendanceTrend,
+} = require("../controllers/attendanceController");
+const { protect, admin } = require("../middleware/authMiddleware");
+const checkWorkingDay = require("../middleware/checkWorkingDayMiddleware");
 
-router.route('/')
+router
+  .route("/")
   .post(protect, checkWorkingDay, createAttendance)
   .get(protect, getAttendances);
 
-router.get('/all', protect, getAllAttendances);
+router.get("/all", protect, getAllAttendances);
 
-router.route('/stats/employee/:employeeId')
-  .get(protect, getAttendanceStats);
+router.route("/trend").get(protect, admin, getAttendanceTrend);
 
-router.route('/:id')
+router.route("/stats/employee/:employeeId").get(protect, getAttendanceStats);
+
+router
+  .route("/:id")
   .get(protect, getAttendanceById)
   .put(protect, updateAttendance);
 
-router.route('/employee/:employeeId')
-  .get(protect, admin, getAttendancesByUser);
+router.route("/employee/:employeeId").get(protect, admin, getAttendancesByUser);
+
+router.route("/stats/all").get(protect, admin, getAllAttendanceStats);
+
+router.route("/stats/department").get(protect, admin, getDepartmentStatistics);
+
+router
+  .route("/stats/employee-performance")
+  .get(protect, admin, getEmployeePerformanceStats);
 
 module.exports = router;

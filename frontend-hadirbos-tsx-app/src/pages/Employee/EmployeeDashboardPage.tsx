@@ -3,7 +3,7 @@ import { useNavigate } from "react-router"
 import type { User } from "../../types/user"
 import type { Attendance } from "../../types/attendance"
 import type { Submission, SubmissionFormData } from "../../types/submission"
-import { getCurrentUser, getProfile, logout } from "../../services/authService"
+import { getCurrentUser, getProfile, logout, updateProfile } from "../../services/authService"
 import Loading from "../../components/Loading"
 import {
   LogOut,
@@ -50,6 +50,20 @@ const EmployeeDashboardPage = () => {
   const [submissionSuccess, setSubmissionSuccess] = useState(false)
   const [submissionError, setSubmissionError] = useState("")
   const [submissionHistory, setSubmissionHistory] = useState<Submission[]>([])
+
+  // First, let's add a new state for the edit profile modal
+  const [showEditProfileModal, setShowEditProfileModal] = useState(false)
+  const [profileFormData, setProfileFormData] = useState({
+    name: "",
+    email: "",
+    department: "",
+    position: "",
+    phone: "",
+    address: "",
+  })
+  const [profileUpdateLoading, setProfileUpdateLoading] = useState(false)
+  const [profileUpdateSuccess, setProfileUpdateSuccess] = useState(false)
+  const [profileUpdateError, setProfileUpdateError] = useState("")
 
   const navigate = useNavigate()
   const userInfo = getCurrentUser()
@@ -268,6 +282,70 @@ const EmployeeDashboardPage = () => {
       case "pending":
       default:
         return "bg-yellow-100 text-yellow-800"
+    }
+  }
+
+  // Add this function to handle opening the edit profile modal
+  const openEditProfileModal = () => {
+    if (profile) {
+      setProfileFormData({
+        name: profile.name || "",
+        email: profile.email || "",
+        department: profile.department || "",
+        position: profile.position || "",
+        phone: profile.phone || "",
+        address: profile.address || "",
+      })
+      setShowEditProfileModal(true)
+    }
+  }
+
+  // Add this function to handle profile form changes
+  const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target
+    setProfileFormData({
+      ...profileFormData,
+      [name]: value,
+    })
+  }
+
+  // Add this function to handle profile update submission
+  const handleProfileUpdate = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setProfileUpdateLoading(true)
+    setProfileUpdateError("")
+
+    try {
+      // Create a new object without department and position
+      const profileUpdateData = {
+        name: profileFormData.name,
+        email: profileFormData.email,
+        phone: profileFormData.phone,
+        address: profileFormData.address,
+      }
+
+      // Use the new updateProfile function from authService
+      const updatedProfile = await updateProfile(profileUpdateData, userInfo.token)
+
+      // Update the profile state with new data
+      setProfile({
+        ...profile!,
+        ...updatedProfile,
+      })
+
+      setProfileUpdateSuccess(true)
+
+      // Close the modal after a short delay
+      setTimeout(() => {
+        setShowEditProfileModal(false)
+        setProfileUpdateSuccess(false)
+      }, 2000)
+    } catch (error) {
+      if (error instanceof Error) {
+        setProfileUpdateError(error.message)
+      }
+    } finally {
+      setProfileUpdateLoading(false)
     }
   }
 
@@ -576,8 +654,14 @@ const EmployeeDashboardPage = () => {
                 <Users className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600" />
               </div>
               <div className="ml-2 sm:ml-3">
-                <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-white">Employee Portal</h1>
-                {profile && <p className="text-xs sm:text-sm text-blue-100">Welcome, {profile.name}</p>}
+                <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-white">
+                  Employee Portal
+                </h1>
+                {profile && (
+                  <p className="text-xs sm:text-sm text-blue-100">
+                    Welcome, {profile.name}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -604,7 +688,11 @@ const EmployeeDashboardPage = () => {
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
-        {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">{error}</div>}
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            {error}
+          </div>
+        )}
 
         {loading ? (
           <Loading fullscreen={true} />
@@ -614,8 +702,14 @@ const EmployeeDashboardPage = () => {
             <div className="lg:col-span-1">
               <div className="bg-white rounded-lg shadow-md overflow-hidden">
                 <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-6 flex flex-col items-center">
-                  <Avatar name={profile.name} size={"lg"} className="font-bold text-3xl p-5" />
-                  <h3 className="text-xl font-bold text-white mt-4">{profile.name}</h3>
+                  <Avatar
+                    name={profile.name}
+                    size={"lg"}
+                    className="font-bold text-3xl p-5"
+                  />
+                  <h3 className="text-xl font-bold text-white mt-4">
+                    {profile.name}
+                  </h3>
                   <p className="text-blue-100">{profile.position}</p>
                 </div>
                 <div className="p-4">
@@ -668,16 +762,22 @@ const EmployeeDashboardPage = () => {
                         d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                       />
                     </svg>
-                    <span className="text-gray-700">Joined: {formatDate(profile.joinDate)}</span>
+                    <span className="text-gray-700">
+                      Joined: {formatDate(profile.joinDate)}
+                    </span>
                   </div>
                 </div>
 
                 <div className="px-4 pb-4">
                   <div className="border-t pt-4">
-                    <h4 className="font-semibold text-gray-700 mb-2">Quick Links</h4>
+                    <h4 className="font-semibold text-gray-700 mb-2">
+                      Quick Links
+                    </h4>
                     <div
                       className={`flex items-center p-2 rounded cursor-pointer ${
-                        activeTab === "attendance" ? "bg-blue-50 text-blue-700" : "hover:bg-gray-50 text-gray-700"
+                        activeTab === "attendance"
+                          ? "bg-blue-50 text-blue-700"
+                          : "hover:bg-gray-50 text-gray-700"
                       }`}
                       onClick={() => setActiveTab("attendance")}
                     >
@@ -710,7 +810,9 @@ const EmployeeDashboardPage = () => {
                     </div>
                     <div
                       className={`flex items-center p-2 rounded cursor-pointer ${
-                        activeTab === "submissions" ? "bg-blue-50 text-blue-700" : "hover:bg-gray-50 text-gray-700"
+                        activeTab === "submissions"
+                          ? "bg-blue-50 text-blue-700"
+                          : "hover:bg-gray-50 text-gray-700"
                       }`}
                       onClick={() => setActiveTab("submissions")}
                     >
@@ -719,7 +821,9 @@ const EmployeeDashboardPage = () => {
                     </div>
                     <div
                       className={`flex items-center p-2 rounded cursor-pointer ${
-                        activeTab === "profile" ? "bg-blue-50 text-blue-700" : "hover:bg-gray-50 text-gray-700"
+                        activeTab === "profile"
+                          ? "bg-blue-50 text-blue-700"
+                          : "hover:bg-gray-50 text-gray-700"
                       }`}
                       onClick={() => setActiveTab("profile")}
                     >
@@ -774,15 +878,26 @@ const EmployeeDashboardPage = () => {
                         <div className="text-center">
                           <div
                             className={`inline-block px-4 py-2 rounded-full text-lg font-semibold mb-4 ${getStatusColor(
-                              todayAttendance.status,
+                              todayAttendance.status
                             )}`}
                           >
-                            {todayAttendance.status.charAt(0).toUpperCase() + todayAttendance.status.slice(1)}
+                            {todayAttendance.status.charAt(0).toUpperCase() +
+                              todayAttendance.status.slice(1)}
                           </div>
-                          <p className="text-gray-700 mb-2">Submitted at: {formatTime(todayAttendance.createdAt)}</p>
-                          {todayAttendance.note && <p className="text-gray-700 italic">"{todayAttendance.note}"</p>}
+                          <p className="text-gray-700 mb-2">
+                            Submitted at:{" "}
+                            {formatTime(todayAttendance.createdAt)}
+                          </p>
+                          {todayAttendance.note && (
+                            <p className="text-gray-700 italic">
+                              "{todayAttendance.note}"
+                            </p>
+                          )}
                           <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-                            <p className="text-blue-700">You've already submitted your attendance for today.</p>
+                            <p className="text-blue-700">
+                              You've already submitted your attendance for
+                              today.
+                            </p>
                           </div>
                         </div>
                       ) : (
@@ -800,14 +915,19 @@ const EmployeeDashboardPage = () => {
                           )}
 
                           <div className="mb-6">
-                            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="attendanceStatus">
+                            <label
+                              className="block text-gray-700 text-sm font-bold mb-2"
+                              htmlFor="attendanceStatus"
+                            >
                               Status:
                             </label>
                             <select
                               id="attendanceStatus"
                               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                               value={attendanceStatus}
-                              onChange={(e) => setAttendanceStatus(e.target.value)}
+                              onChange={(e) =>
+                                setAttendanceStatus(e.target.value)
+                              }
                             >
                               {availableStatusOptions.map((status) => (
                                 <option key={status} value={status}>
@@ -830,7 +950,10 @@ const EmployeeDashboardPage = () => {
                           </div>
 
                           <div className="mb-6">
-                            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="attendanceNote">
+                            <label
+                              className="block text-gray-700 text-sm font-bold mb-2"
+                              htmlFor="attendanceNote"
+                            >
                               Note (optional):
                             </label>
                             <textarea
@@ -839,7 +962,9 @@ const EmployeeDashboardPage = () => {
                               rows={3}
                               placeholder="Add a note about your attendance status..."
                               value={attendanceNote}
-                              onChange={(e) => setAttendanceNote(e.target.value)}
+                              onChange={(e) =>
+                                setAttendanceNote(e.target.value)
+                              }
                             ></textarea>
                           </div>
 
@@ -942,26 +1067,37 @@ const EmployeeDashboardPage = () => {
                           <tbody className="divide-y divide-gray-200">
                             {attendanceData.slice(0, 5).map((record, index) => (
                               <tr key={index} className="hover:bg-gray-50">
-                                <td className="py-3 px-4 text-sm text-gray-700">{formatDate(record.createdAt)}</td>
-                                <td className="py-3 px-4 text-sm text-gray-700">{formatTime(record.createdAt)}</td>
+                                <td className="py-3 px-4 text-sm text-gray-700">
+                                  {formatDate(record.createdAt)}
+                                </td>
+                                <td className="py-3 px-4 text-sm text-gray-700">
+                                  {formatTime(record.createdAt)}
+                                </td>
                                 <td className="py-3 px-4">
                                   <span
                                     className={`inline-block px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
-                                      record.status,
+                                      record.status
                                     )}`}
                                   >
-                                    {record.status.charAt(0).toUpperCase() + record.status.slice(1)}
+                                    {record.status.charAt(0).toUpperCase() +
+                                      record.status.slice(1)}
                                   </span>
                                 </td>
                                 <td className="py-3 px-4 text-sm text-gray-700">
-                                  {record.note || <span className="text-gray-400 italic">No note</span>}
+                                  {record.note || (
+                                    <span className="text-gray-400 italic">
+                                      No note
+                                    </span>
+                                  )}
                                 </td>
                               </tr>
                             ))}
                           </tbody>
                         </table>
                       ) : (
-                        <div className="text-center py-4 text-gray-500">No attendance records found.</div>
+                        <div className="text-center py-4 text-gray-500">
+                          No attendance records found.
+                        </div>
                       )}
                     </div>
                   </div>
@@ -1097,17 +1233,28 @@ const EmployeeDashboardPage = () => {
                     <div className="grid md:grid-cols-2 gap-6">
                       <div className="space-y-4">
                         <div>
-                          <label className="block text-xs font-medium text-gray-500 mb-1">FULL NAME</label>
-                          <p className="text-gray-800 font-medium">{profile.name}</p>
-                        </div>
-                        <div>
-                          <label className="block text-xs font-medium text-gray-500 mb-1">EMAIL ADDRESS</label>
-                          <p className="text-gray-800 font-medium">{profile.email}</p>
-                        </div>
-                        <div>
-                          <label className="block text-xs font-medium text-gray-500 mb-1">EMPLOYEE ID</label>
+                          <label className="block text-xs font-medium text-gray-500 mb-1">
+                            FULL NAME
+                          </label>
                           <p className="text-gray-800 font-medium">
-                            {profile._id || "EMP-" + Math.floor(Math.random() * 10000)}
+                            {profile.name}
+                          </p>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-500 mb-1">
+                            EMAIL ADDRESS
+                          </label>
+                          <p className="text-gray-800 font-medium">
+                            {profile.email}
+                          </p>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-500 mb-1">
+                            EMPLOYEE ID
+                          </label>
+                          <p className="text-gray-800 font-medium">
+                            {profile._id ||
+                              "EMP-" + Math.floor(Math.random() * 10000)}
                           </p>
                         </div>
                         <div>
@@ -1121,16 +1268,28 @@ const EmployeeDashboardPage = () => {
                       </div>
                       <div className="space-y-4">
                         <div>
-                          <label className="block text-xs font-medium text-gray-500 mb-1">DEPARTMENT</label>
-                          <p className="text-gray-800 font-medium">{profile.department}</p>
+                          <label className="block text-xs font-medium text-gray-500 mb-1">
+                            DEPARTMENT
+                          </label>
+                          <p className="text-gray-800 font-medium">
+                            {profile.department}
+                          </p>
                         </div>
                         <div>
-                          <label className="block text-xs font-medium text-gray-500 mb-1">POSITION</label>
-                          <p className="text-gray-800 font-medium">{profile.position}</p>
+                          <label className="block text-xs font-medium text-gray-500 mb-1">
+                            POSITION
+                          </label>
+                          <p className="text-gray-800 font-medium">
+                            {profile.position}
+                          </p>
                         </div>
                         <div>
-                          <label className="block text-xs font-medium text-gray-500 mb-1">JOIN DATE</label>
-                          <p className="text-gray-800 font-medium">{formatDate(profile.joinDate)}</p>
+                          <label className="block text-xs font-medium text-gray-500 mb-1">
+                            JOIN DATE
+                          </label>
+                          <p className="text-gray-800 font-medium">
+                            {formatDate(profile.joinDate)}
+                          </p>
                         </div>
                         <div>
                           <label className="block text-xs font-medium text-gray-500 mb-1">
@@ -1144,21 +1303,34 @@ const EmployeeDashboardPage = () => {
                     </div>
 
                     <div className="mt-8 pt-6 border-t">
-                      <h4 className="text-lg font-semibold text-gray-700 mb-4">Contact Information</h4>
+                      <h4 className="text-lg font-semibold text-gray-700 mb-4">
+                        Contact Information
+                      </h4>
                       <div className="grid md:grid-cols-2 gap-6">
                         <div>
-                          <label className="block text-xs font-medium text-gray-500 mb-1">PHONE NUMBER</label>
-                          <p className="text-gray-800 font-medium">{profile.phone || "-"}</p>
+                          <label className="block text-xs font-medium text-gray-500 mb-1">
+                            PHONE NUMBER
+                          </label>
+                          <p className="text-gray-800 font-medium">
+                            {profile.phone || "-"}
+                          </p>
                         </div>
                         <div>
-                          <label className="block text-xs font-medium text-gray-500 mb-1">ADDRESS</label>
-                          <p className="text-gray-800 font-medium">{profile.address || "-"}</p>
+                          <label className="block text-xs font-medium text-gray-500 mb-1">
+                            ADDRESS
+                          </label>
+                          <p className="text-gray-800 font-medium">
+                            {profile.address || "-"}
+                          </p>
                         </div>
                       </div>
                     </div>
 
                     <div className="mt-8 flex justify-end">
-                      <button className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors duration-200 flex items-center">
+                      <button
+                        onClick={openEditProfileModal}
+                        className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors duration-200 flex items-center"
+                      >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           className="h-5 w-5 mr-2"
@@ -1201,6 +1373,187 @@ const EmployeeDashboardPage = () => {
           </div>
         )}
       </div>
+      {showEditProfileModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full mx-auto border border-gray-200">
+            <h2 className="text-xl font-bold text-gray-800 mb-4">
+              Edit Profile
+            </h2>
+
+            {profileUpdateSuccess && (
+              <div className="mb-4 p-3 bg-green-50 border border-green-200 text-green-700 rounded-lg">
+                Profile updated successfully!
+              </div>
+            )}
+
+            {profileUpdateError && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg">
+                {profileUpdateError}
+              </div>
+            )}
+
+            <form onSubmit={handleProfileUpdate}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label
+                    className="block text-gray-700 text-sm font-medium mb-1"
+                    htmlFor="name"
+                  >
+                    Full Name
+                  </label>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    value={profileFormData.name}
+                    onChange={handleProfileChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label
+                    className="block text-gray-700 text-sm font-medium mb-1"
+                    htmlFor="email"
+                  >
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    value={profileFormData.email}
+                    onChange={handleProfileChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label
+                    className="block text-gray-700 text-sm font-medium mb-1"
+                    htmlFor="department"
+                  >
+                    Department
+                  </label>
+                  <input
+                    type="text"
+                    id="department"
+                    name="department"
+                    value={profileFormData.department}
+                    onChange={handleProfileChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-100"
+                    disabled
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Department cannot be changed by employee
+                  </p>
+                </div>
+
+                <div>
+                  <label
+                    className="block text-gray-700 text-sm font-medium mb-1"
+                    htmlFor="position"
+                  >
+                    Position
+                  </label>
+                  <input
+                    type="text"
+                    id="position"
+                    name="position"
+                    value={profileFormData.position}
+                    onChange={handleProfileChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-100"
+                    disabled
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Position cannot be changed by employee
+                  </p>
+                </div>
+
+                <div>
+                  <label
+                    className="block text-gray-700 text-sm font-medium mb-1"
+                    htmlFor="phone"
+                  >
+                    Phone Number
+                  </label>
+                  <input
+                    type="text"
+                    id="phone"
+                    name="phone"
+                    value={profileFormData.phone}
+                    onChange={handleProfileChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    className="block text-gray-700 text-sm font-medium mb-1"
+                    htmlFor="address"
+                  >
+                    Address
+                  </label>
+                  <input
+                    type="text"
+                    id="address"
+                    name="address"
+                    value={profileFormData.address}
+                    onChange={handleProfileChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-3">
+                <button
+                  type="button"
+                  onClick={() => setShowEditProfileModal(false)}
+                  className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center"
+                  disabled={profileUpdateLoading}
+                >
+                  {profileUpdateLoading ? (
+                    <>
+                      <svg
+                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      Updating...
+                    </>
+                  ) : (
+                    "Save Changes"
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {isPayslipModalOpen && (
         <PaySlip
@@ -1209,7 +1562,7 @@ const EmployeeDashboardPage = () => {
         />
       )}
     </div>
-  )
+  );
 }
 
 export default EmployeeDashboardPage

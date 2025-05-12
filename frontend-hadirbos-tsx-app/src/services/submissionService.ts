@@ -1,5 +1,5 @@
 import axios from "axios"
-import type { SubmissionFormData, SubmissionStats } from "../types/submission"
+import type { SubmissionFormData } from "../types/submission"
 
 const BASE_URL = "http://localhost:5000/api/submissions"
 const FILE_URL = "http://localhost:5000/api/files"
@@ -134,20 +134,55 @@ export const getSubmissionById = async (submissionId: string, token: string) => 
 }
 
 // Get submission statistics (admin only)
-export const getSubmissionStats = async (token: string): Promise<SubmissionStats> => {
+export const getSubmissionStats = async (
+  token: string,
+  month?: number,
+  year?: number,
+  period?: string
+) => {
   const config = {
     headers: {
       Authorization: `Bearer ${token}`,
     },
-  }
+  };
+
+  const params = new URLSearchParams();
+  if (month !== undefined) params.append("month", month.toString());
+  if (year !== undefined) params.append("year", year.toString());
+  if (period) params.append("period", period);
 
   try {
-    const response = await axios.get(`${BASE_URL}/stats`, config)
-    return response.data
+    const response = await axios.get(`${BASE_URL}/stats?${params.toString()}`, config);
+    return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      throw new Error(error.response?.data?.message || "Failed to fetch submission statistics")
+      throw new Error(
+        error.response?.data?.message || "Failed to fetch submission statistics"
+      );
     }
-    throw new Error("An unexpected error occurred")
+    throw new Error("An unexpected error occurred");
   }
-}
+};
+
+export const getSubmissionTrend = async (token: string, month?: number, year?: number, period?: string) => {
+  const config = {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  };
+
+  const params = new URLSearchParams();
+  if (month !== undefined) params.append("month", month.toString());
+  if (year !== undefined) params.append("year", year.toString());
+  if (period) params.append("period", period);
+
+  try {
+    const response = await axios.get(`${BASE_URL}/trend?${params.toString()}`, config);
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      throw new Error(error.response?.data?.message || "Failed to fetch submission trend");
+    }
+    throw new Error("An unexpected error occurred");
+  }
+};

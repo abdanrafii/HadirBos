@@ -13,6 +13,7 @@ import SubmissionsPage from "./pages/AdminHR/submissions/SubmissionsPage"
 import SubmissionDetailPage from "./pages/AdminHR/submissions/SubmissionDetailPage"
 import PayrollPage from "./pages/AdminHR/payroll/PayrollPage";
 import EditPayrollPage from "./pages/AdminHR/payroll/EditPayrollPage";
+import ReportsPage from "./pages/AdminHR/reports/ReportsPage"
 
 function App() {
   return (
@@ -43,7 +44,7 @@ function App() {
         <Route
           path="/admin/submissions"
           element={
-            <AdminLayout showSearch={true}>
+            <AdminLayout showSearch={false}>
               <SubmissionsPage />
             </AdminLayout>
           }
@@ -66,6 +67,15 @@ function App() {
         />
 
         <Route path="admin/payroll/edit/:id" element={<EditPayrollPage />} />
+
+        <Route
+          path="/admin/reports"
+          element={
+            <AdminLayout showSearch={false}>
+              <ReportsPage />
+            </AdminLayout>
+          }
+        />
       </Route>
 
       {/* Employee Protected Route */}
@@ -75,7 +85,7 @@ function App() {
 
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
-  )
+  );
 }
 
 export default App
