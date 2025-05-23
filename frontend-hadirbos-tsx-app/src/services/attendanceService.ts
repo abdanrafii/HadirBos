@@ -28,7 +28,10 @@ type AttendancePayload = {
 };
 
 export const postAttendance = async (
-  attendancePayload: AttendancePayload,
+  attendancePayload: {
+    status: string;
+    note: string;
+  },
   token: string
 ) => {
   const config = {
@@ -41,6 +44,39 @@ export const postAttendance = async (
   try {
     const response = await axios.post(
       `${BASE_URL}/attendance`,
+      attendancePayload,
+      config
+    );
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      throw new Error(
+        error.response?.data?.message || "Failed to submit attendance"
+      );
+    }
+    throw new Error("An unexpected error occurred");
+  }
+};
+
+export const postAttendanceAdminOnly = async (
+  attendancePayload: {
+    status: string;
+    note: string;
+    date: string;
+    employeeId: string;
+  },
+  token: string
+) => {
+  const config = {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  };
+
+  try {
+    const response = await axios.post(
+      `${BASE_URL}/attendance/admin`,
       attendancePayload,
       config
     );

@@ -725,6 +725,9 @@ const ReportsPage = () => {
                             <PieChartIcon className="h-5 w-5 mr-2 text-indigo-600" />
                             Attendance Distribution
                           </h2>
+                          {/* <p className="text-sm text-gray-500">
+                            {}
+                          </p> */}
                         </div>
                         <div className="h-64">
                           <ResponsiveContainer width="100%" height="100%">
@@ -1108,6 +1111,9 @@ const ReportsPage = () => {
                                 Late
                               </th>
                               <th className="border-b border-gray-200 p-3 text-center text-sm font-semibold text-gray-700">
+                                Sick
+                              </th>
+                              <th className="border-b border-gray-200 p-3 text-center text-sm font-semibold text-gray-700">
                                 Leave
                               </th>
                               <th className="border-b border-gray-200 p-3 text-center text-sm font-semibold text-gray-700">
@@ -1156,6 +1162,11 @@ const ReportsPage = () => {
                                   <td className="border-b border-gray-200 p-3 text-center">
                                     <span className="px-2 py-1 bg-amber-50 text-amber-700 rounded-full text-xs font-medium border border-amber-200">
                                       {item.late}
+                                    </span>
+                                  </td>
+                                  <td className="border-b border-gray-200 p-3 text-center">
+                                    <span className="px-2 py-1 bg-indigo-50 text-indigo-700 rounded-full text-xs font-medium border border-indigo-200">
+                                      {item.sick}
                                     </span>
                                   </td>
                                   <td className="border-b border-gray-200 p-3 text-center">

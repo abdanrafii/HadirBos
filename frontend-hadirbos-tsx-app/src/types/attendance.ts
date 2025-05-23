@@ -47,7 +47,7 @@ export type AttendanceStat = {
 };
 
 export type AggregateStats = {
-  totalDaysWorked: number;
+  totalWorkDays: number;
   presentRate: number;
   absenceRate: number;
   leaveRate: number;

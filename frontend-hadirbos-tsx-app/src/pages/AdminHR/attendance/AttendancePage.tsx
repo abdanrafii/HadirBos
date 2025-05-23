@@ -17,6 +17,7 @@ import {
   getAllAttendance,
   getAttendanceByEmployeeId,
   getAttendanceById,
+  postAttendanceAdminOnly,
   updateAttendance,
 } from "../../../services/attendanceService";
 import { getUsers } from "../../../services/userService";
@@ -266,6 +267,36 @@ export default function AttendancePage() {
     return stats;
   };
 
+  const reloadAttendance = async () => {
+    try {
+      if (!selectedEmployee) return;
+      const response = await getAttendanceByEmployeeId(
+        userInfo.token,
+        selectedEmployee,
+        currentMonth + 1,
+        currentYear
+      );
+      setAttendanceByIdEmployee(response);
+    } catch (error) {
+      if (error instanceof Error) {
+        setError(error.message);
+      }
+    }
+  };
+
+  const reloadAbsences = async () => {
+    try {
+      const response = await getAllAttendance(userInfo.token);
+      setAttendanceData(response);
+    } catch (error) {
+      if (error instanceof Error) {
+        setError(error.message);
+      }
+    } finally {
+      setLoadAbsences(false);
+    }
+  };
+
   // Add this function to handle form changes
   const handleEditChange = (
     e: React.ChangeEvent<HTMLSelectElement | HTMLTextAreaElement>
@@ -309,6 +340,8 @@ export default function AttendancePage() {
       setEditingRecord(updatedAttendance);
 
       setUpdateSuccess(true);
+      reloadAttendance();
+      reloadAbsences();
 
       // Exit edit mode after a short delay
       setTimeout(() => {
@@ -333,6 +366,65 @@ export default function AttendancePage() {
     // Reset update states
     setUpdateSuccess(false);
     setUpdateError("");
+  };
+
+  const [isAddAttendanceOpen, setIsAddAttendanceOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [addFormData, setAddFormData] = useState({
+    status: "present",
+    note: "",
+    date: selectedDate || "",
+    employeeId: selectedEmployee || "",
+  });
+
+  const handleAddAttendance = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setUpdateLoading(true);
+      setUpdateError("");
+      setUpdateSuccess(false);
+
+      await postAttendanceAdminOnly(addFormData, userInfo.token);
+
+      setUpdateSuccess(true);
+      setIsAddAttendanceOpen(false);
+      reloadAttendance();
+
+    } catch (error) {
+      if (error instanceof Error) {
+        setUpdateError(error.message);
+      }
+    } finally {
+      setUpdateLoading(false);
+    }
+  };
+
+  const openAddAttendance = (date: string) => {
+    if (!selectedEmployee) {
+      return;
+    }
+    setSelectedDate(date);
+    setIsAddAttendanceOpen(true);
+  };
+
+  useEffect(() => {
+    setAddFormData((prev) => ({
+      ...prev,
+      date: selectedDate || "",
+      employeeId: selectedEmployee || "",
+    }));
+  }, [selectedDate, selectedEmployee]);
+
+  const handleAddChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
+  ) => {
+    const { name, value } = e.target;
+    setAddFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   // Open attendance detail modal
@@ -399,7 +491,19 @@ export default function AttendancePage() {
                   className={`p-1 md:p-2 rounded-lg ${
                     isWeekend ? "bg-gray-50" : "bg-white"
                   } min-h-[60px] md:min-h-[80px] cursor-pointer hover:bg-gray-200 transition-colors border border-gray-200`}
-                  onClick={() => openAttendanceDetail(dayAttendance?._id ?? "")}
+                  onClick={() => {
+                    if (dayAttendance?._id) {
+                      openAttendanceDetail(dayAttendance._id);
+                    } else {
+                      const selectedDate = new Date(
+                        currentYear,
+                        currentMonth,
+                        day + 1
+                      );
+                      const isoDate = selectedDate.toISOString().split("T")[0]; // format ISO date
+                      openAddAttendance(isoDate);
+                    }
+                  }}
                 >
                   <div className="text-gray-800 font-medium mb-1 md:mb-2 text-xs md:text-sm">
                     {day}
@@ -1030,207 +1134,316 @@ export default function AttendancePage() {
           ></div>
         )}
 
-        {attendanceDetailOpen &&
-          selectedAttendance &&
-          editingRecord && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-              <div className="bg-white p-4 md:p-6 rounded-lg shadow-xl max-w-md w-full mx-auto border border-gray-200">
-                {loadDetail ? (
-                  <Loading />
-                ) : (
-                  (() => {
-                    // const employee = employees.find(
-                    //   (emp) => emp._id === selectedEmployee
-                    // );
-                    const record = editingRecord;
-                    const formattedDate = format(
-                      parseISO(record.date),
-                      "EEEE, d MMMM yyyy"
-                    );
+        {attendanceDetailOpen && selectedAttendance && editingRecord && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white p-4 md:p-6 rounded-lg shadow-xl max-w-md w-full mx-auto border border-gray-200">
+              {loadDetail ? (
+                <Loading />
+              ) : (
+                (() => {
+                  // const employee = employees.find(
+                  //   (emp) => emp._id === selectedEmployee
+                  // );
+                  const record = editingRecord;
+                  const formattedDate = format(
+                    parseISO(record.date),
+                    "EEEE, d MMMM yyyy"
+                  );
 
-                    return (
-                      <>
-                        <div className="flex items-center justify-between mb-4">
-                          <div className="flex items-center">
-                            <Avatar name={record.employeeId?.name} className="mr-3" />
-                            <div>
-                              <h3 className="text-lg md:text-xl font-bold text-gray-800">
-                                {record.employeeId?.name}
-                              </h3>
-                              <p className="text-xs md:text-sm text-gray-600">
-                                {formattedDate}
-                              </p>
-                            </div>
+                  return (
+                    <>
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center">
+                          <Avatar
+                            name={record.employeeId?.name}
+                            className="mr-3"
+                          />
+                          <div>
+                            <h3 className="text-lg md:text-xl font-bold text-gray-800">
+                              {record.employeeId?.name}
+                            </h3>
+                            <p className="text-xs md:text-sm text-gray-600">
+                              {formattedDate}
+                            </p>
                           </div>
                         </div>
+                      </div>
 
-                        {updateSuccess && (
-                          <div className="mb-4 p-3 bg-green-50 border border-green-200 text-green-700 rounded-lg">
-                            Attendance record updated successfully!
-                          </div>
-                        )}
+                      {updateSuccess && (
+                        <div className="mb-4 p-3 bg-green-50 border border-green-200 text-green-700 rounded-lg">
+                          Attendance record updated successfully!
+                        </div>
+                      )}
 
-                        {updateError && (
-                          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg">
-                            {updateError}
-                          </div>
-                        )}
+                      {updateError && (
+                        <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg">
+                          {updateError}
+                        </div>
+                      )}
 
-                        {editMode ? (
-                          // Edit Mode
-                          <form onSubmit={handleUpdateAttendance}>
-                            <div className="mb-4">
-                              <label
-                                className="block text-gray-700 text-sm font-medium mb-2"
-                                htmlFor="status"
-                              >
-                                Attendance Status
-                              </label>
-                              <select
-                                id="status"
-                                name="status"
-                                value={editFormData.status}
-                                onChange={handleEditChange}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                required
-                              >
-                                <option value="present">Present</option>
-                                <option value="late">Late</option>
-                                <option value="absent">Absent</option>
-                                <option value="sick">Sick</option>
-                                <option value="leave">Leave</option>
-                              </select>
-                            </div>
-
-                            <div className="mb-4">
-                              <label
-                                className="block text-gray-700 text-sm font-medium mb-2"
-                                htmlFor="note"
-                              >
-                                Note
-                              </label>
-                              <textarea
-                                id="note"
-                                name="note"
-                                value={editFormData.note}
-                                onChange={handleEditChange}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[100px]"
-                                placeholder="Add a note about this attendance record..."
-                              ></textarea>
-                            </div>
-
-                            <div className="flex justify-between">
-                              <button
-                                type="button"
-                                className="px-3 md:px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors text-sm md:text-base"
-                                onClick={() => setEditMode(false)}
-                              >
-                                Cancel
-                              </button>
-
-                              <button
-                                type="submit"
-                                className="px-3 md:px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm md:text-base flex items-center"
-                                disabled={updateLoading}
-                              >
-                                {updateLoading ? (
-                                  <>
-                                    <svg
-                                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                                      xmlns="http://www.w3.org/2000/svg"
-                                      fill="none"
-                                      viewBox="0 0 24 24"
-                                    >
-                                      <circle
-                                        className="opacity-25"
-                                        cx="12"
-                                        cy="12"
-                                        r="10"
-                                        stroke="currentColor"
-                                        strokeWidth="4"
-                                      ></circle>
-                                      <path
-                                        className="opacity-75"
-                                        fill="currentColor"
-                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                      ></path>
-                                    </svg>
-                                    Updating...
-                                  </>
-                                ) : (
-                                  "Save Changes"
-                                )}
-                              </button>
-                            </div>
-                          </form>
-                        ) : (
-                          // View Mode
-                          <>
-                            <div
-                              className={`p-3 md:p-4 rounded-lg border-l-4 mb-4 ${getStatusColor(
-                                record.status
-                              )}`}
+                      {editMode ? (
+                        // Edit Mode
+                        <form onSubmit={handleUpdateAttendance}>
+                          <div className="mb-4">
+                            <label
+                              className="block text-gray-700 text-sm font-medium mb-2"
+                              htmlFor="status"
                             >
-                              <div className="text-base md:text-lg font-bold">
-                                {getStatusLabel(record.status)}
-                              </div>
-                              {record.note && (
-                                <div className="mt-2 italic text-sm">
-                                  {record.note}
-                                </div>
-                              )}
-                            </div>
+                              Attendance Status
+                            </label>
+                            <select
+                              id="status"
+                              name="status"
+                              value={editFormData.status}
+                              onChange={handleEditChange}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              required
+                            >
+                              <option value="present">Present</option>
+                              <option value="late">Late</option>
+                              <option value="absent">Absent</option>
+                              <option value="sick">Sick</option>
+                              <option value="leave">Leave</option>
+                            </select>
+                          </div>
 
-                            {record.date && (
-                              <div className="bg-gray-50 p-3 rounded-lg mb-4 md:mb-6">
-                                <div className="text-xs md:text-sm text-gray-600">
-                                  Entry Time
-                                </div>
-                                <div className="text-lg md:text-xl font-bold text-gray-800">
-                                  {new Date(record.date).toLocaleTimeString(
-                                    [],
-                                    {
-                                      hour: "2-digit",
-                                      minute: "2-digit",
-                                      hour12: false,
-                                    }
-                                  )}
-                                </div>
+                          <div className="mb-4">
+                            <label
+                              className="block text-gray-700 text-sm font-medium mb-2"
+                              htmlFor="note"
+                            >
+                              Note
+                            </label>
+                            <textarea
+                              id="note"
+                              name="note"
+                              value={editFormData.note}
+                              onChange={handleEditChange}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[100px]"
+                              placeholder="Add a note about this attendance record..."
+                            ></textarea>
+                          </div>
+
+                          <div className="flex justify-between">
+                            <button
+                              type="button"
+                              className="px-3 md:px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors text-sm md:text-base"
+                              onClick={() => setEditMode(false)}
+                            >
+                              Cancel
+                            </button>
+
+                            <button
+                              type="submit"
+                              className="px-3 md:px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm md:text-base flex items-center"
+                              disabled={updateLoading}
+                            >
+                              {updateLoading ? (
+                                <>
+                                  <svg
+                                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <circle
+                                      className="opacity-25"
+                                      cx="12"
+                                      cy="12"
+                                      r="10"
+                                      stroke="currentColor"
+                                      strokeWidth="4"
+                                    ></circle>
+                                    <path
+                                      className="opacity-75"
+                                      fill="currentColor"
+                                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                    ></path>
+                                  </svg>
+                                  Updating...
+                                </>
+                              ) : (
+                                "Save Changes"
+                              )}
+                            </button>
+                          </div>
+                        </form>
+                      ) : (
+                        // View Mode
+                        <>
+                          <div
+                            className={`p-3 md:p-4 rounded-lg border-l-4 mb-4 ${getStatusColor(
+                              record.status
+                            )}`}
+                          >
+                            <div className="text-base md:text-lg font-bold">
+                              {getStatusLabel(record.status)}
+                            </div>
+                            {record.note && (
+                              <div className="mt-2 italic text-sm">
+                                {record.note}
                               </div>
                             )}
+                          </div>
 
-                            <div className="flex justify-between">
-                              <button
-                                className="px-3 md:px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors text-sm md:text-base"
-                                onClick={() => setAttendanceDetailOpen(false)}
-                              >
-                                Close
-                              </button>
-
-                              {userInfo.role === "admin" && (
-                                <button
-                                  className="px-3 md:px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm md:text-base"
-                                  onClick={() => {
-                                    setEditMode(true);
-                                    setEditFormData({
-                                      status: record.status,
-                                      note: record.note || "",
-                                    });
-                                  }}
-                                >
-                                  Edit Attendance
-                                </button>
-                              )}
+                          {record.date && (
+                            <div className="bg-gray-50 p-3 rounded-lg mb-4 md:mb-6">
+                              <div className="text-xs md:text-sm text-gray-600">
+                                Entry Time
+                              </div>
+                              <div className="text-lg md:text-xl font-bold text-gray-800">
+                                {new Date(record.date).toLocaleTimeString([], {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                  hour12: false,
+                                })}
+                              </div>
                             </div>
-                          </>
-                        )}
-                      </>
-                    );
-                  })()
-                )}
-              </div>
+                          )}
+
+                          <div className="flex justify-between">
+                            <button
+                              className="px-3 md:px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors text-sm md:text-base"
+                              onClick={() => setAttendanceDetailOpen(false)}
+                            >
+                              Close
+                            </button>
+
+                            {userInfo.role === "admin" && (
+                              <button
+                                className="px-3 md:px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm md:text-base"
+                                onClick={() => {
+                                  setEditMode(true);
+                                  setEditFormData({
+                                    status: record.status,
+                                    note: record.note || "",
+                                  });
+                                }}
+                              >
+                                Edit Attendance
+                              </button>
+                            )}
+                          </div>
+                        </>
+                      )}
+                    </>
+                  );
+                })()
+              )}
             </div>
-          )}
+          </div>
+        )}
+
+        {isAddAttendanceOpen && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white p-4 rounded-lg shadow-xl max-w-md w-full mx-auto border border-gray-200">
+              <form onSubmit={handleAddAttendance}>
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-xl font-bold text-gray-800">
+                    Add Attendance
+                  </h3>
+                  <div className="inline-flex items-center px-3 py-2 bg-blue-50 text-blue-700 rounded-lg">
+                    <Calendar size={18} className="mr-2" />
+                    <span className="font-medium">
+                      {selectedDate
+                        ? new Date(selectedDate).toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          })
+                        : ""}
+                    </span>
+                  </div>
+                </div>
+
+                {updateError && (
+                  <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg">
+                    {updateError}
+                  </div>
+                )}
+
+                <div className="mb-4">
+                  <label
+                    htmlFor="status"
+                    className="block text-gray-700 font-medium mb-1"
+                  >
+                    Status
+                  </label>
+                  <select
+                    id="status"
+                    name="status"
+                    value={addFormData.status}
+                    onChange={handleAddChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  >
+                    <option value="present">Present</option>
+                    <option value="late">Late</option>
+                    <option value="absent">Absent</option>
+                    <option value="sick">Sick</option>
+                    <option value="leave">Leave</option>
+                  </select>
+                </div>
+
+                <div className="mb-4">
+                  <label
+                    htmlFor="note"
+                    className="block text-gray-700 font-medium mb-1"
+                  >
+                    Note
+                  </label>
+                  <textarea
+                    id="note"
+                    name="note"
+                    value={addFormData.note}
+                    onChange={handleAddChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[100px]"
+                    placeholder="Add a note..."
+                  ></textarea>
+                </div>
+
+                <div className="flex justify-between">
+                  <button
+                    type="button"
+                    onClick={() => setIsAddAttendanceOpen(false)}
+                    className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={updateLoading}
+                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center"
+                  >
+                    {updateLoading && (
+                      <svg
+                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                    )}
+                    {updateLoading ? "Saving..." : "Save"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );

@@ -12,6 +12,7 @@ const {
   getDepartmentStatistics,
   getEmployeePerformanceStats,
   getAttendanceTrend,
+  createAttendanceAdminOnly,
 } = require("../controllers/attendanceController");
 const { protect, admin } = require("../middleware/authMiddleware");
 const checkWorkingDay = require("../middleware/checkWorkingDayMiddleware");
@@ -22,6 +23,8 @@ router
   .get(protect, getAttendances);
 
 router.get("/all", protect, getAllAttendances);
+
+router.route("/admin").post(protect, admin, createAttendanceAdminOnly);
 
 router.route("/trend").get(protect, admin, getAttendanceTrend);
 

@@ -118,9 +118,11 @@ const autoPayroll = async () => {
 
       // console.log(`Found ${attendances.length} attendance records for ${name}`);
 
+      const missingDays = totalWorkingDays - attendances.length;
+
       const absentDays = attendances.filter(
         (a) => a.status === "absent"
-      ).length;
+      ).length + missingDays;
       const lateDays = attendances.filter((a) => a.status === "late").length;
       const presentDays = attendances.filter(
         (a) => a.status === "present"

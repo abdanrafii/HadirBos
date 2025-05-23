@@ -165,11 +165,10 @@ const EmployeeDashboardPage = () => {
       const attendancePayload = {
         status: attendanceStatus,
         note: attendanceNote,
-        employeeId: userInfo._id,
+        // employeeId: userInfo._id,
       }
 
       const data = await postAttendance(attendancePayload, userInfo.token)
-      console.log("Attendance submitted:", data)
 
       setAttendanceData([data, ...attendanceData])
       setTodayAttendance(data)

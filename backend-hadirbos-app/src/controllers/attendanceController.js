@@ -34,6 +34,48 @@ const createAttendance = asyncHandler(async (req, res) => {
   }
 });
 
+// @desc    Create attendance record
+// @route   POST /api/attendance/admin
+// @access  Private
+const createAttendanceAdminOnly = asyncHandler(async (req, res) => {
+  const { status, note, date, employeeId } = req.body;
+
+  if (!date) {
+    res.status(400);
+    throw new Error("Date is required");
+  }
+
+  const selectedDate = new Date(date);
+
+  // Check if already submitted for the selected date
+  const existingAttendance = await Attendance.findOne({
+    employeeId,
+    date: {
+      $gte: new Date(selectedDate.setHours(0, 0, 0, 0)),
+      $lt: new Date(selectedDate.setHours(23, 59, 59, 999)),
+    },
+  });
+
+  if (existingAttendance) {
+    res.status(400);
+    throw new Error("Attendance already submitted for this date");
+  }
+
+  const attendance = await Attendance.create({
+    employeeId,
+    status,
+    note,
+    date: selectedDate,
+  });
+
+  if (attendance) {
+    res.status(201).json(attendance);
+  } else {
+    res.status(400);
+    throw new Error("Invalid attendance data");
+  }
+});
+
 // @desc    Get all attendance records for current employee
 // @route   GET /api/attendance
 // @access  Private
@@ -159,7 +201,7 @@ const getAttendanceStats = asyncHandler(async (req, res) => {
       attendanceRate:
         totalWorkDays > 0
           ? (
-              (safeData.filter((r) => r.status === "present").length /
+              ((safeData.filter((r) => r.status === "present").length + safeData.filter((r) => r.status === "late").length) /
                 totalWorkDays) *
               100
             ).toFixed(2)
@@ -289,16 +331,17 @@ const getAllAttendanceStats = asyncHandler(async (req, res) => {
       const safeData = data || [];
 
       const daysWorked = safeData.length;
+      const missingDays = totalWorkDays - daysWorked;
 
       const present = safeData.filter((r) => r.status === "present").length;
-      const absent = safeData.filter((r) => r.status === "absent").length;
+      const absent = safeData.filter((r) => r.status === "absent").length + missingDays;
       const leave = safeData.filter((r) => r.status === "leave").length;
       const late = safeData.filter((r) => r.status === "late").length;
       const sick = safeData.filter((r) => r.status === "sick").length;
 
       const attendanceRate =
         totalWorkDays > 0
-          ? ((present / totalWorkDays) * 100).toFixed(2)
+          ? (((present + late) / totalWorkDays) * 100).toFixed(2)
           : "0.00";
 
       const employeeStats = {
@@ -476,7 +519,9 @@ const getDepartmentStatistics = asyncHandler(async (req, res) => {
             startDate,
             endDate
           );
+
           const safeData = data || [];
+          const missingDays = employeeWorkDays - safeData.length;
 
           totalPresent += safeData.filter(
             (record) => record.status === "present"
@@ -492,7 +537,7 @@ const getDepartmentStatistics = asyncHandler(async (req, res) => {
           ).length;
           totalAbsent += safeData.filter(
             (record) => record.status === "absent"
-          ).length;
+          ).length + missingDays;
         } catch (employeeError) {
           console.error(employeeError);
         }
@@ -500,7 +545,7 @@ const getDepartmentStatistics = asyncHandler(async (req, res) => {
 
       const attendanceRate =
         totalWorkDays > 0
-          ? ((totalPresent / totalWorkDays) * 100).toFixed(2)
+          ? (((totalPresent + totalLate) / totalWorkDays) * 100).toFixed(2)
           : "0.00";
 
       const turnoverRate =
@@ -516,11 +561,26 @@ const getDepartmentStatistics = asyncHandler(async (req, res) => {
         leaveRequests,
         resignations,
         attendanceBreakdown: {
-          present: totalPresent,
-          late: totalLate,
-          leave: totalLeave,
-          sick: totalSick,
-          absent: totalAbsent,
+          present:
+            totalWorkDays > 0
+              ? ((totalPresent / totalWorkDays) * 100).toFixed(2)
+              : "0.00",
+          late:
+            totalWorkDays > 0
+              ? ((totalLate / totalWorkDays) * 100).toFixed(2)
+              : "0.00",
+          leave:
+            totalWorkDays > 0
+              ? ((totalLeave / totalWorkDays) * 100).toFixed(2)
+              : "0.00",
+          sick:
+            totalWorkDays > 0
+              ? ((totalSick / totalWorkDays) * 100).toFixed(2)
+              : "0.00",
+          absent:
+            totalWorkDays > 0
+              ? ((totalAbsent / totalWorkDays) * 100).toFixed(2)
+              : "0.00",
         },
       };
 
@@ -583,9 +643,13 @@ const getEmployeePerformanceStats = asyncHandler(async (req, res) => {
           (record) => record.status === "present"
         ).length;
 
+        const lateDays = safeData.filter(
+          (record) => record.status === "late"
+        ).length;
+
         const attendanceRate =
           totalWorkDays > 0
-            ? ((presentDays / totalWorkDays) * 100).toFixed(2)
+            ? (((presentDays + lateDays) / totalWorkDays) * 100).toFixed(2)
             : "0.00";
 
         employeeStats.push({
@@ -746,10 +810,11 @@ const processAttendanceTrend = async (employees, month, year, period) => {
             endDate
           );
           const safeData = data || [];
+          const missingDays = totalWorkDays - safeData.length;
 
           return {
             present: safeData.filter((r) => r.status === "present").length,
-            absent: safeData.filter((r) => r.status === "absent").length,
+            absent: safeData.filter((r) => r.status === "absent").length + missingDays,
             leave: safeData.filter((r) => r.status === "leave").length,
             late: safeData.filter((r) => r.status === "late").length,
             sick: safeData.filter((r) => r.status === "sick").length,
@@ -812,6 +877,7 @@ const processAttendanceTrend = async (employees, month, year, period) => {
 module.exports = {
   getAllAttendances,
   createAttendance,
+  createAttendanceAdminOnly,
   getAttendances,
   getAttendanceById,
   updateAttendance,
