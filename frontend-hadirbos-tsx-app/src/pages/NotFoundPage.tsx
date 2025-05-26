@@ -5,6 +5,7 @@ import { Link, useNavigate } from "react-router"
 import { getCurrentUser } from "../services/authService"
 
 const NotFoundPage = () => {
+  const [searchTerm, setSearchTerm] = useState("")
   const [userRole, setUserRole] = useState<string | null>(null)
   const navigate = useNavigate()
   
